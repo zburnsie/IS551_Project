@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500&family=Instrument+Sans:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tokens.css">
+<style>
+  html,body{margin:0;height:100%;}
+  body{background:var(--paper);position:relative;width:960px;height:320px;overflow:hidden;}
+  svg{position:absolute;left:0;top:0;}
+  .brand{fill:var(--brand);} .accent{fill:var(--accent);} .highlight{fill:var(--highlight);} .ink{fill:var(--ink);}
+  .tile{rx:var(--radius-md);ry:var(--radius-md);}
+  .name{position:absolute;left:48px;bottom:32px;max-width:440px;}
+  .name h1{margin:0;font-family:"Fraunces",Georgia,serif;font-weight:500;font-size:104px;line-height:.95;letter-spacing:-.02em;color:var(--ink);}
+  .name p{margin:16px 0 0;font-family:"Instrument Sans",system-ui,sans-serif;font-size:14px;line-height:20px;color:var(--ink-muted);}
+</style>
+</head>
+<body>
+<svg width="960" height="320" viewBox="0 0 960 320" role="img" aria-label="Terracotta, olive, mustard and ink blocks with discs split in two, each half taking a neighbor's color">
+  <!--
+    blocks: brand 224x232 (7×space-8 wide), accent 216x232, highlight 112x88, ink 104x96 — radius-md corners
+    arrangement: staggered stack right of x=480, brand slab bleeding off the top, accent bleeding right and bottom, highlight and ink as satellites
+    pattern: literal motif — split discs (half-rounds from radius-pill), because the app is about splitting things fairly; each half wears the neighboring block's color
+    scales: space-8 (32) grid for block edges and disc radii (48 = space-8 + space-4, 32, 24), radius-md on blocks, radius-pill → full circles
+  -->
+  <rect class="brand tile" x="528" y="-8" width="224" height="232"/>
+  <rect class="accent tile" x="752" y="96" width="216" height="232"/>
+  <rect class="highlight tile" x="624" y="240" width="112" height="88"/>
+  <rect class="ink tile" x="864" y="-8" width="104" height="96"/>
+  <!-- split disc on the brand/accent seam -->
+  <path class="accent" d="M752 112 A48 48 0 0 0 752 208 Z"/>
+  <path class="brand" d="M752 112 A48 48 0 0 1 752 208 Z"/>
+  <!-- split disc on the brand/paper edge -->
+  <path class="highlight" d="M568 224 A24 24 0 0 1 616 224 Z"/>
+  <path class="brand" d="M568 224 A24 24 0 0 0 616 224 Z"/>
+  <!-- split disc on the ink/accent corner -->
+  <path class="accent" d="M832 48 A32 32 0 0 0 832 112 Z"/>
+  <path class="ink" d="M832 48 A32 32 0 0 1 832 112 Z"/>
+</svg>
+<div class="name">
+  <h1>Common<br>Room</h1>
+  <p>Split the rent, the groceries and the dishes — fairly.</p>
+</div>
+</body>
+</html>

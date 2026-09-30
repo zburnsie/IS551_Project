@@ -1,0 +1,36 @@
+/* Common Room design tokens */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Instrument+Sans:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --paper: #F7F1E8; /* Page background — warm cream ground for every screen. */
+  --surface: #FFFBF5; /* Cards, sheets, list rows and inputs raised off `paper`. */
+  --rule: #E3D7C6; /* Hairline dividers between rows and sections; card borders instead of shadows. */
+  --ink: #2A211B; /* Headlines, body copy and amounts on `paper`, `surface` and `highlight`. */
+  --ink-muted: #6B5B4E; /* Secondary text — dates, captions, helper text — on `paper` and `surface` (≥5.7:1). */
+  --brand: #B5532F; /* Terracotta. Primary actions, the app's identity, and money you owe (always with a word like “You owe”). Text on it is `on-color`. */
+  --accent: #4F6B3A; /* Olive. Chores, done/settled states and money owed to you (always with a word like “Owed to you”). Text on it is `on-color`. */
+  --highlight: #E6B84A; /* Mustard. Due-soon chores, today markers, and a soft fill behind a key number. Text on it is `ink`, never white. */
+  --on-color: #FFFBF5; /* Text and icons on `brand` and `accent` fills (≥4.8:1). */
+  --focus: #2A211B; /* 2px solid focus ring, offset 2px, on every surface. */
+  --font-display: "Fraunces", Georgia, serif;
+  --font-sans: "Instrument Sans", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-4: 16px;
+  --space-8: 32px;
+  --radius-sm: 3px;
+  --radius-md: 8px;
+  --radius-pill: 999px;
+}
+
+.text-display { font-family: var(--font-display); font-size: 56px; line-height: 60px; font-weight: 500; }
+.text-title { font-family: var(--font-display); font-size: 32px; line-height: 38px; font-weight: 500; }
+.text-heading { font-family: var(--font-display); font-size: 22px; line-height: 28px; font-weight: 600; }
+.text-body { font-family: var(--font-sans); font-size: 16px; line-height: 24px; font-weight: 400; }
+.text-label { font-family: var(--font-sans); font-size: 14px; line-height: 20px; font-weight: 600; }
+.text-amount { font-family: var(--font-mono); font-size: 16px; line-height: 22px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.text-caption { font-family: var(--font-mono); font-size: 12px; line-height: 16px; font-weight: 400; font-variant-numeric: tabular-nums; text-transform: uppercase; letter-spacing: .08em; }
+
+body { background: var(--paper); color: var(--ink); font-family: var(--font-sans); font-size: 16px; line-height: 24px; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
