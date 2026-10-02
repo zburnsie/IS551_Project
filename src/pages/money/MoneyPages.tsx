@@ -248,18 +248,54 @@ export function LogIouPage() {
   )
 }
 
-/** One IOU. The roommate who didn't log it confirms or declines it here. */
+/** Lets the roommate being asked propose a different amount (or a different favor) instead. */
+function SuggestChangeForm({ iou, otherName, onCancel }: { iou: Iou; otherName: string; onCancel: () => void }) {
+  const { suggestIouChange } = useApp()
+  const [amount, setAmount] = useState(iou.kind === 'money' ? (iou.amountCents / 100).toFixed(2) : '')
+  const [favor, setFavor] = useState(iou.favor)
+  const amountCents = Math.round(Number(amount) * 100)
+  const changed = iou.kind === 'money' ? amountCents > 0 && amountCents !== iou.amountCents : favor.trim() !== '' && favor.trim() !== iou.favor
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault()
+    if (!changed) return
+    suggestIouChange(iou.id, iou.kind === 'money' ? { amountCents, favor: '' } : { amountCents: 0, favor: favor.trim() })
+    onCancel()
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      {iou.kind === 'money' ? (
+        <Field label="What you think it should be" hint={`${otherName} will be asked to confirm the new amount.`}>
+          <TextInput autoFocus type="number" inputMode="decimal" min="0" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} className="text-amount" />
+        </Field>
+      ) : (
+        <Field label="What you think it should be" hint={`${otherName} will be asked to confirm the change.`}>
+          <TextInput autoFocus value={favor} onChange={(e) => setFavor(e.target.value)} placeholder="a coffee" />
+        </Field>
+      )}
+      <div className="flex flex-wrap gap-2">
+        <Button type="submit" disabled={!changed}>Send to {otherName}</Button>
+        <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>
+      </div>
+    </form>
+  )
+}
+
+/** One IOU. Whoever it's waiting on confirms it, declines it, or suggests a different amount. */
 export function IouDetailPage() {
   const { iouId = '' } = useParams()
   const { state, me, nameOf, userOf, respondToIou, withdrawIou } = useApp()
   const navigate = useNavigate()
   const sentence = useIouSentence()
+  const [suggesting, setSuggesting] = useState(false)
   const iou = state.ious.find((i) => i.id === iouId)
   if (!iou) return <Navigate to="/money" replace />
 
   const otherId = iou.debtor === me!.id ? iou.creditor : iou.debtor
   const involved = iou.debtor === me!.id || iou.creditor === me!.id
-  const iConfirm = iou.status === 'pending' && iou.createdBy !== me!.id && involved
+  const iConfirm = iou.status === 'pending' && iou.waitingOn === me!.id
+  const previousValue = iou.previous && iouValue({ ...iou, ...iou.previous })
   const history = state.activity.filter((a) => a.iouId === iou.id)
 
   return (
@@ -291,19 +327,35 @@ export function IouDetailPage() {
           </div>
         </dl>
 
+        {iou.previous && iou.status === 'pending' && (
+          <p className="text-body">
+            {nameOf(iou.previous.suggestedBy)} suggested <strong>{iouValue(iou)}</strong> instead of {previousValue}.
+          </p>
+        )}
         {iConfirm && (
-          <div className="flex flex-col gap-2 rounded-md border border-highlight bg-paper p-4">
-            <p className="text-body">{nameOf(iou.createdBy)} logged this. Does it look right to you?</p>
-            <div className="flex flex-wrap gap-2">
-              <Button variant="accent" onClick={() => respondToIou(iou.id, true)}>Yes, confirm</Button>
-              <Button variant="secondary" onClick={() => respondToIou(iou.id, false)}>No, decline</Button>
-            </div>
+          <div className="flex flex-col gap-4 rounded-md border border-highlight bg-paper p-4">
+            {suggesting ? (
+              <SuggestChangeForm iou={iou} otherName={nameOf(otherId)} onCancel={() => setSuggesting(false)} />
+            ) : (
+              <>
+                <p className="text-body">
+                  {iou.previous ? `Does ${iouValue(iou)} work for you?` : `${nameOf(iou.createdBy)} logged this. Does it look right to you?`}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="accent" onClick={() => respondToIou(iou.id, true)}>Yes, confirm</Button>
+                  <Button variant="secondary" onClick={() => setSuggesting(true)}>
+                    {iou.kind === 'money' ? 'Suggest a different amount' : 'Suggest something else'}
+                  </Button>
+                  <Button variant="secondary" onClick={() => respondToIou(iou.id, false)}>Decline</Button>
+                </div>
+              </>
+            )}
           </div>
         )}
-        {iou.status === 'pending' && iou.createdBy === me!.id && (
+        {iou.status === 'pending' && involved && !iConfirm && (
           <div className="flex flex-wrap items-center gap-4">
             <p className="text-body flex-1 text-ink-muted">Waiting for {nameOf(otherId)} to confirm.</p>
-            <Button
+            {iou.createdBy === me!.id && <Button
               variant="secondary"
               onClick={() => {
                 withdrawIou(iou.id)
@@ -311,7 +363,7 @@ export function IouDetailPage() {
               }}
             >
               Withdraw
-            </Button>
+            </Button>}
           </div>
         )}
         {iou.status === 'open' && involved && (

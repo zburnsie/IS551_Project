@@ -67,7 +67,7 @@ Sign-in is simulated: passwords aren't checked or saved, and "Continue with your
 | | **3. Money and IOUs** | |
 | 17 | Balances: who owes whom | `/money` |
 | 18 | Log an IOU ($ or "a dinner") | `/money/new` |
-| 19 | IOU detail: roommate confirms or declines | `/money/ious/:iouId` |
+| 19 | IOU detail: roommate confirms, declines, or suggests a different amount | `/money/ious/:iouId` |
 | 20 | Settle up: both mark as paid | `/money/settle/:userId` |
 | | **Other** | |
 | 21 | Inbox (notifications) | `/inbox` |
@@ -75,7 +75,7 @@ Sign-in is simulated: passwords aren't checked or saved, and "Continue with your
 
 **How rotation works:** a repeating chore has a rotation (who takes turns, in room order). Marking it complete moves the due date forward and hands it to the next person, who gets notified. One-off chores just stay done.
 
-**How IOUs work:** whoever logs an IOU sends it to the other roommate to confirm; it only counts toward balances once confirmed. To settle up, each of you marks it paid; it clears once both have.
+**How IOUs work:** whoever logs an IOU sends it to the other roommate to confirm; it only counts toward balances once confirmed. Instead of confirming, they can decline it or suggest a different amount (or a different favor), which goes back to the first roommate to confirm. This can go back and forth until one of them confirms or declines. To settle up, each of you marks it paid; it clears once both have.
 
 ## Project layout
 

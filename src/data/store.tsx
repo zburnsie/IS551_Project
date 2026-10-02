@@ -18,7 +18,14 @@ function newRoomCode(): string {
 function load(): AppState {
   try {
     const saved = localStorage.getItem(STORAGE_KEY)
-    if (saved) return { ...emptyState, ...(JSON.parse(saved) as AppState) }
+    if (saved) {
+      const state = { ...emptyState, ...(JSON.parse(saved) as AppState) }
+      // Older saves don't have `waitingOn`; it's whoever didn't log the IOU.
+      state.ious = state.ious.map((i) =>
+        i.waitingOn ? i : { ...i, waitingOn: i.createdBy === i.debtor ? i.creditor : i.debtor },
+      )
+      return state
+    }
   } catch {
     // Ignore unreadable storage and start fresh.
   }
@@ -60,6 +67,8 @@ type AppContextValue = {
   // IOUs
   logIou: (iou: Pick<Iou, 'debtor' | 'creditor' | 'kind' | 'amountCents' | 'favor' | 'note'>) => string
   respondToIou: (iouId: string, accept: boolean) => void
+  /** Sends the IOU back to the other roommate with a different amount (or favor) to confirm. */
+  suggestIouChange: (iouId: string, change: { amountCents: number; favor: string }) => void
   withdrawIou: (iouId: string) => void
   markPaidWith: (otherId: UserId) => void
 
@@ -259,8 +268,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     logIou: (iou) => {
       const id = newId()
-      const full: Iou = { ...iou, id, roomId, createdBy: meId, date: todayIso(), status: 'pending', paidMarks: [] }
       const other = iou.debtor === meId ? iou.creditor : iou.debtor
+      const full: Iou = { ...iou, id, roomId, createdBy: meId, date: todayIso(), status: 'pending', waitingOn: other, paidMarks: [] }
       setState((s) =>
         withActivity(
           { ...s, ious: [full, ...s.ious] },
@@ -272,16 +281,41 @@ export function AppProvider({ children }: { children: ReactNode }) {
     respondToIou: (iouId, accept) => {
       const iou = state.ious.find((i) => i.id === iouId)
       if (!iou) return
+      const other = iou.debtor === meId ? iou.creditor : iou.debtor
       setState((s) =>
         withActivity(
           { ...s, ious: s.ious.map((i) => (i.id === iouId ? { ...i, status: accept ? 'open' : 'declined' } : i)) },
           {
             kind: accept ? 'iou-confirmed' : 'iou-declined',
             actor: meId,
-            subject: iou.createdBy,
+            subject: other,
             label: `${iouValue(iou)} · ${iou.note}`,
             iouId,
-            notify: [iou.createdBy],
+            notify: [other],
+          },
+        ),
+      )
+    },
+    suggestIouChange: (iouId, change) => {
+      const iou = state.ious.find((i) => i.id === iouId)
+      if (!iou) return
+      const other = iou.debtor === meId ? iou.creditor : iou.debtor
+      const updated: Iou = {
+        ...iou,
+        ...change,
+        waitingOn: other,
+        previous: { amountCents: iou.amountCents, favor: iou.favor, suggestedBy: meId },
+      }
+      setState((s) =>
+        withActivity(
+          { ...s, ious: s.ious.map((i) => (i.id === iouId ? updated : i)) },
+          {
+            kind: 'iou-countered',
+            actor: meId,
+            subject: other,
+            label: `${iouValue(updated)} instead of ${iouValue(iou)} · ${iou.note}`,
+            iouId,
+            notify: [other],
           },
         ),
       )

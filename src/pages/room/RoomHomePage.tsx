@@ -20,7 +20,7 @@ export function RoomHomePage() {
     .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
   const dueSoon = myChores.filter((c) => daysUntil(c.dueDate) <= 2).length
   const net = members.slice(1).reduce((sum, m) => sum + moneyBalance(roomIous, me!.id, m.id), 0)
-  const needsMe = roomIous.filter((i) => i.status === 'pending' && i.createdBy !== me!.id && (i.debtor === me!.id || i.creditor === me!.id))
+  const needsMe = roomIous.filter((i) => i.status === 'pending' && i.waitingOn === me!.id)
   const feed = state.activity.filter((a) => a.roomId === room!.id).slice(0, 6)
 
   return (
@@ -61,7 +61,7 @@ export function RoomHomePage() {
               <li key={iou.id}>
                 <Link to={`/money/ious/${iou.id}`} className="flex flex-wrap items-center gap-4 rounded-md border border-highlight bg-surface p-4 hover:border-ink">
                   <span className="text-body flex-1">
-                    {nameOf(iou.createdBy)} says {iou.debtor === me!.id ? 'you owe them' : 'they owe you'}{' '}
+                    {nameOf(iou.debtor === me!.id ? iou.creditor : iou.debtor)} {iou.previous ? 'suggests' : 'says'} {iou.debtor === me!.id ? 'you owe them' : 'they owe you'}{' '}
                     {iou.kind === 'money' ? <span className="text-amount">{formatMoney(iou.amountCents)}</span> : iou.favor} for “{iou.note}”
                   </span>
                   <span className="text-label underline">Review</span>

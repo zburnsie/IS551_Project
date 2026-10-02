@@ -54,11 +54,11 @@ export function demoState(): AppState {
       { id: 'vacuum', listId: 'common', title: 'Vacuum the common room', notes: '', dueDate: d(4), repeat: 'biweekly', rotation: ['sam', 'jordan', 'alex', 'maya'], assignedTo: 'sam', done: false },
     ],
     ious: [
-      { id: 'pizza', roomId: room, debtor: 'maya', creditor: 'alex', kind: 'money', amountCents: 2000, favor: '', note: 'Pizza on Friday', createdBy: 'alex', date: d(-3), status: 'open', paidMarks: [] },
-      { id: 'detergent', roomId: room, debtor: 'alex', creditor: 'sam', kind: 'money', amountCents: 1250, favor: '', note: 'Laundry detergent', createdBy: 'sam', date: d(-5), status: 'open', paidMarks: [] },
-      { id: 'dinner', roomId: room, debtor: 'jordan', creditor: 'alex', kind: 'favor', amountCents: 0, favor: 'a dinner', note: 'Covered my shift on dishes', createdBy: 'alex', date: d(-6), status: 'open', paidMarks: [] },
-      { id: 'uber', roomId: room, debtor: 'alex', creditor: 'sam', kind: 'money', amountCents: 800, favor: '', note: 'Uber back from the game', createdBy: 'sam', date: d(-1), status: 'pending', paidMarks: [] },
-      { id: 'tickets', roomId: room, debtor: 'jordan', creditor: 'maya', kind: 'money', amountCents: 1500, favor: '', note: 'Movie ticket', createdBy: 'maya', date: d(-9), status: 'settled', paidMarks: ['jordan', 'maya'] },
+      { id: 'pizza', roomId: room, debtor: 'maya', creditor: 'alex', kind: 'money', amountCents: 2000, favor: '', note: 'Pizza on Friday', createdBy: 'alex', waitingOn: 'maya', date: d(-3), status: 'open', paidMarks: [] },
+      { id: 'detergent', roomId: room, debtor: 'alex', creditor: 'sam', kind: 'money', amountCents: 1250, favor: '', note: 'Laundry detergent', createdBy: 'sam', waitingOn: 'alex', date: d(-5), status: 'open', paidMarks: [] },
+      { id: 'dinner', roomId: room, debtor: 'jordan', creditor: 'alex', kind: 'favor', amountCents: 0, favor: 'a dinner', note: 'Covered my shift on dishes', createdBy: 'alex', waitingOn: 'jordan', date: d(-6), status: 'open', paidMarks: [] },
+      { id: 'uber', roomId: room, debtor: 'alex', creditor: 'sam', kind: 'money', amountCents: 800, favor: '', note: 'Uber back from the game', createdBy: 'sam', waitingOn: 'alex', date: d(-1), status: 'pending', paidMarks: [] },
+      { id: 'tickets', roomId: room, debtor: 'jordan', creditor: 'maya', kind: 'money', amountCents: 1500, favor: '', note: 'Movie ticket', createdBy: 'maya', waitingOn: 'jordan', date: d(-9), status: 'settled', paidMarks: ['jordan', 'maya'] },
     ],
     activity: [
       feed({ id: 'a1', at: at(1, 21), kind: 'iou-logged', actor: 'sam', subject: 'alex', label: '$8.00 · Uber back from the game', iouId: 'uber', notify: ['alex'], readBy: ['sam'] }),

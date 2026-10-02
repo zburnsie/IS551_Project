@@ -23,6 +23,8 @@ export function describeActivity(a: Activity, nameOf: NameOf): string {
       return `${actor} logged an IOU with ${subject}: ${a.label}`
     case 'iou-confirmed':
       return `${actor} confirmed the IOU: ${a.label}`
+    case 'iou-countered':
+      return `${actor} suggested ${a.label}`
     case 'iou-declined':
       return `${actor} declined the IOU: ${a.label}`
     case 'iou-marked-paid':

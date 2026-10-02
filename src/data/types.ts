@@ -57,8 +57,12 @@ export type Iou = {
   note: string
   createdBy: UserId
   date: string
-  /** pending → waiting on the other roommate; open → confirmed and unpaid. */
+  /** pending → waiting on `waitingOn`; open → confirmed and unpaid. */
   status: 'pending' | 'declined' | 'open' | 'settled'
+  /** While pending, the roommate who needs to confirm, decline or suggest a different amount. */
+  waitingOn: UserId
+  /** What was asked before the latest suggestion, if the amount was changed. */
+  previous?: { amountCents: number; favor: string; suggestedBy: UserId }
   /** Roommates who have marked it paid. Settled once both have. */
   paidMarks: UserId[]
 }
@@ -71,6 +75,7 @@ export type ActivityKind =
   | 'chore-done'
   | 'iou-logged'
   | 'iou-confirmed'
+  | 'iou-countered'
   | 'iou-declined'
   | 'iou-marked-paid'
   | 'iou-settled'
