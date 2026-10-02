@@ -30,13 +30,52 @@ Then open the URL it prints (usually http://localhost:5173).
 
 ## What's here so far
 
-Three working pages running on placeholder data:
+A clickable low-fidelity prototype of the roommate happy path: onboarding, shared chores, and money/IOUs. There's no backend yet; everything lives in your browser's localStorage.
 
-- **Balances** (`/`): what each roommate owes you or you owe them, with a "Settle up" button, plus your chores due soon.
-- **Expenses** (`/expenses`): add an expense and split it evenly between any roommates, and see the history.
-- **Chores** (`/chores`): add chores, assign them, and check them off.
+**Prototype bar.** The dark bar at the bottom of every screen is not part of the app. Use it to:
 
-There's no backend yet. Data lives in React state and is saved to your browser's localStorage, so each person sees their own copy. To reset it, clear localStorage for the site or call `resetDemoData()` from `useHousehold()`.
+- **Load demo room**: jump into "Dorm 204" as Alex, with chores, IOUs and activity already filled in.
+- **Acting as**: switch to another roommate, so you can confirm an IOU or mark it paid from both sides.
+- **Reset**: clear everything and start from the homepage.
+
+Sign-in is simulated: passwords aren't checked or saved, and "Continue with your school account" just asks for a `.edu` email.
+
+### Screens
+
+| # | Screen | Route |
+| --- | --- | --- |
+| | **Before login** | |
+| 1 | Homepage | `/` |
+| 2 | Sign up (email or school login) | `/signup` |
+| 3 | Log in | `/login` |
+| | **1. Onboarding** | |
+| 4 | Create profile (name, photo, dorm) | `/welcome/profile` |
+| 5 | Create or join a room | `/welcome/room` |
+| 6 | Create room group | `/welcome/room/new` |
+| 7 | Join with a code (invite links `/join/CODE` land here) | `/welcome/join` |
+| 8 | Invite roommates (link / code) | `/welcome/invite`, `/room/invite` |
+| | **Room** | |
+| 9 | Room home: your chores, balance, IOUs to confirm, activity | `/room` |
+| | **2. Shared chores** | |
+| 10 | Chore lists | `/chores` |
+| 11 | Create chore list | `/chores/lists/new` |
+| 12 | Chore list | `/chores/lists/:listId` |
+| 13 | Add chore (due date, repeat) | `/chores/lists/:listId/add` |
+| 14 | Assign roommate and rotation (assignee is notified) | `/chores/:choreId/assign` |
+| 15 | Chore detail: mark complete, rotation, history | `/chores/:choreId` |
+| 16 | Chore done: room sees it, next person in rotation | `/chores/:choreId/done` |
+| | **3. Money and IOUs** | |
+| 17 | Balances: who owes whom | `/money` |
+| 18 | Log an IOU ($ or "a dinner") | `/money/new` |
+| 19 | IOU detail: roommate confirms or declines | `/money/ious/:iouId` |
+| 20 | Settle up: both mark as paid | `/money/settle/:userId` |
+| | **Other** | |
+| 21 | Inbox (notifications) | `/inbox` |
+| 22 | Profile and room settings | `/settings` |
+
+**How rotation works:** a repeating chore has a rotation (who takes turns, in room order). Marking it complete moves the due date forward and hands it to the next person, who gets notified. One-off chores just stay done.
+
+**How IOUs work:** whoever logs an IOU sends it to the other roommate to confirm; it only counts toward balances once confirmed. To settle up, each of you marks it paid; it clears once both have.
 
 ## Project layout
 
@@ -44,19 +83,26 @@ There's no backend yet. Data lives in React state and is saved to your browser's
 design-system/        Common Room design system (tokens, Tailwind preset, guidelines)
 src/
   main.tsx            App entry: loads tokens.css, router, and the data provider
-  App.tsx             Routes
-  components/         Shared UI: Layout, Button, Card/Section, Tag, form fields
-  pages/              One file per page
+  App.tsx             Routes, grouped by the happy-path sections
+  components/         Shared UI: layouts, route guards, Button, Card, Tag, fields, Avatar, PrototypeBar
+  pages/
+    public/           Homepage, sign up, log in, invite links
+    onboarding/       Profile, create/join room, invite
+    room/             Room home, settings
+    chores/           Lists, add, assign, detail, done
+    money/            Balances, log IOU, IOU detail, settle up, inbox
   data/
-    types.ts          Household, Roommate, Expense, Payment, Chore types
-    seed.ts           Placeholder data
-    household.tsx     HouseholdProvider + useHousehold() hook (the temporary data store)
+    types.ts          User, Room, ChoreList, Chore, Iou, Activity types
+    seed.ts           Empty state and the demo room
+    store.tsx         AppProvider + useApp() hook (the temporary data store)
   lib/
     balances.ts       Who-owes-whom math (amounts are in cents)
-    format.ts         Money and date formatting
+    chores.ts         Repeat labels, next due date, rotation
+    activity.ts       Feed and inbox sentences
+    format.ts         Money, date and name formatting
 ```
 
-Components only read and write data through `useHousehold()`. When we add a backend, we should only need to change `src/data/household.tsx`.
+Pages only read and write data through `useApp()`. When we add a backend, we should only need to change `src/data/store.tsx`.
 
 ## Design system
 
@@ -80,7 +126,7 @@ Use the existing components (`Button`, `Card`, `Section`, `Tag`, `Field`) where 
 ## Ideas for next steps
 
 - Choose and add a backend (for example Firebase or Supabase) so the household is shared
-- Sign in, and inviting roommates to a household
+- Real sign-in and invites
 - Uneven splits (by percentage or exact amounts)
 - Recurring expenses like rent and utilities
-- Chore rotation
+- Reordering a chore rotation by drag and drop
