@@ -4,14 +4,14 @@ import { BrowserRouter } from 'react-router-dom'
 import '../design-system/tokens.css'
 import './index.css'
 import App from './App.tsx'
-import { HouseholdProvider } from './data/household.tsx'
+import { AppProvider } from './data/store.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
-      <HouseholdProvider>
+      <AppProvider>
         <App />
-      </HouseholdProvider>
+      </AppProvider>
     </BrowserRouter>
   </StrictMode>,
 )

@@ -1,39 +1,26 @@
-import type { Household, RoommateId } from '../data/types'
+import type { Iou, UserId } from '../data/types'
+import { formatMoney } from './format'
 
-/**
- * Splits `amountCents` evenly across `count` people. Any leftover cents go to
- * the first people in the list so the shares always add up to the total.
- */
-export function splitEvenly(amountCents: number, count: number): number[] {
-  const base = Math.floor(amountCents / count)
-  const remainder = amountCents - base * count
-  return Array.from({ length: count }, (_, i) => base + (i < remainder ? 1 : 0))
+/** Confirmed, unpaid IOUs between two roommates (either direction). */
+export function openIousBetween(ious: Iou[], a: UserId, b: UserId): Iou[] {
+  return ious.filter(
+    (i) =>
+      i.status === 'open' &&
+      ((i.debtor === a && i.creditor === b) || (i.debtor === b && i.creditor === a)),
+  )
 }
 
 /**
- * How much each roommate owes you (positive) or you owe them (negative), in cents.
+ * Net money between you and another roommate, in cents: positive means they
+ * owe you, negative means you owe them. Only confirmed money IOUs count.
  */
-export function balancesWithMe(household: Household): Map<RoommateId, number> {
-  const { meId } = household
-  const balances = new Map<RoommateId, number>()
-  for (const r of household.roommates) {
-    if (r.id !== meId) balances.set(r.id, 0)
-  }
-  const add = (id: RoommateId, cents: number) => balances.set(id, (balances.get(id) ?? 0) + cents)
+export function moneyBalance(ious: Iou[], meId: UserId, otherId: UserId): number {
+  return openIousBetween(ious, meId, otherId)
+    .filter((i) => i.kind === 'money')
+    .reduce((sum, i) => sum + (i.creditor === meId ? i.amountCents : -i.amountCents), 0)
+}
 
-  for (const e of household.expenses) {
-    const shares = splitEvenly(e.amountCents, e.splitAmong.length)
-    e.splitAmong.forEach((person, i) => {
-      if (person === e.paidBy) return
-      if (e.paidBy === meId) add(person, shares[i]) // they owe me their share
-      else if (person === meId) add(e.paidBy, -shares[i]) // I owe the payer my share
-    })
-  }
-
-  for (const p of household.payments) {
-    if (p.from === meId) add(p.to, p.amountCents) // I paid them down
-    else if (p.to === meId) add(p.from, -p.amountCents) // they paid me down
-  }
-
-  return balances
+/** "$20.00" or "a dinner" — what the IOU is worth, in words. */
+export function iouValue(iou: Iou): string {
+  return iou.kind === 'money' ? formatMoney(iou.amountCents) : iou.favor
 }
