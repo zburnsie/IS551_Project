@@ -209,7 +209,7 @@ export function InviteRoommatesPage({ inApp = false }: { inApp?: boolean }) {
           <span className="text-body text-ink-muted">You can invite people later from settings.</span>
         </div>
       )}
-      {inApp && <ButtonLink to="/room" variant="secondary" className="self-start">Done</ButtonLink>}
+
     </>
   )
 }

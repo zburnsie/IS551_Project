@@ -54,11 +54,11 @@ export function SettingsPage() {
       />
       <Flash />
 
-      <Section title="Your profile">
+      <Section title="Your Profile">
         {editing ? (
           <Card>
             <ProfileForm
-              submitLabel="Save profile"
+              submitLabel="Save Profile"
               onSaved={() => {
                 setEditing(false)
                 navigate('/settings', { replace: true, state: { flash: 'Profile saved.' } })
