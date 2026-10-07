@@ -2,9 +2,10 @@ import { Link } from 'react-router-dom'
 import { ActivityList } from '../../components/ActivityList'
 import { Avatar } from '../../components/Avatar'
 import { ButtonLink } from '../../components/Button'
-import { Card, Section } from '../../components/Card'
+import { Section } from '../../components/Card'
 import { ChoreRow } from '../../components/ChoreRow'
 import { EmptyState, Flash } from '../../components/PageHeader'
+import { Tag } from '../../components/Tag'
 import { useApp } from '../../data/store'
 import { moneyBalance } from '../../lib/balances'
 import { daysUntil, formatMoney } from '../../lib/format'
@@ -31,26 +32,35 @@ export function RoomHomePage() {
         <h1 className="text-title">Hi, {me!.name.split(' ')[0]}</h1>
       </header>
 
+      {/* The two main ways into the app. Olive for chores, terracotta for money, each with a worded call to action. */}
       <div className="grid gap-4 sm:grid-cols-2">
-        <Link to="/chores" className="rounded-md hover:opacity-90">
-          <Card className="flex h-full flex-col gap-1">
-            <span className="text-caption text-ink-muted">Your chores</span>
+        <Link to="/chores" className="group flex flex-col overflow-hidden rounded-md border border-rule bg-surface transition hover:border-accent">
+          <span className="h-2 bg-accent" aria-hidden />
+          <span className="flex flex-1 flex-col gap-2 p-4">
+            <span><Tag tone="accent">Your chores</Tag></span>
             <span className="text-heading">
               {myChores.length === 0 ? 'Nothing on your plate' : `${myChores.length} to do`}
             </span>
-            <span className="text-body text-ink-muted">{dueSoon > 0 ? `${dueSoon} due in the next two days` : 'Nothing due soon'}</span>
-          </Card>
+            <span className="text-body flex-1 text-ink-muted">{dueSoon > 0 ? `${dueSoon} due in the next two days` : 'Nothing due soon'}</span>
+            <span className="text-label text-accent group-hover:underline">
+              {myChores.length === 0 ? 'Add or assign chores' : 'See your chores'} →
+            </span>
+          </span>
         </Link>
-        <Link to="/money" className="rounded-md hover:opacity-90">
-          <Card className="flex h-full flex-col gap-1">
-            <span className="text-caption text-ink-muted">Your balance</span>
+        <Link to="/money" className="group flex flex-col overflow-hidden rounded-md border border-rule bg-surface transition hover:border-brand">
+          <span className="h-2 bg-brand" aria-hidden />
+          <span className="flex flex-1 flex-col gap-2 p-4">
+            <span><Tag tone="brand">Your balance</Tag></span>
             <span className="text-heading">
               {net === 0 && 'All square'}
               {net > 0 && <>You’re owed <span className="font-mono">{formatMoney(net)}</span></>}
               {net < 0 && <>You owe <span className="font-mono">{formatMoney(-net)}</span></>}
             </span>
-            <span className="text-body text-ink-muted">Across {members.length - 1} {members.length === 2 ? 'roommate' : 'roommates'}</span>
-          </Card>
+            <span className="text-body flex-1 text-ink-muted">Across {members.length - 1} {members.length === 2 ? 'roommate' : 'roommates'}</span>
+            <span className="text-label text-brand group-hover:underline">
+              {net === 0 ? 'Log an IOU' : 'See balances and settle up'} →
+            </span>
+          </span>
         </Link>
       </div>
 
