@@ -113,7 +113,7 @@ export function AppLayout() {
               <Wordmark to="/room" />
               <p className="text-caption text-ink-muted">{room!.name}</p>
             </div>
-            <Link to="/settings" className="flex items-center gap-2 rounded-pill hover:opacity-80" aria-label="Profile and room settings">
+            <Link to="/settings" className="flex items-center gap-2 rounded-md border border-rule px-4 py-2 hover:bg-paper transition" aria-label="Profile and room settings">
               <span className="text-label hidden sm:inline">{me!.name}</span>
               <Avatar user={me!} />
             </Link>

@@ -53,6 +53,7 @@ type AppContextValue = {
 
   // Room
   createRoom: (name: string) => void
+  updateRoom: (patch: Partial<Pick<Room, 'name'>>) => void
   joinRoom: (code: string) => boolean
   simulateRoommateJoining: () => string | null
 
@@ -168,6 +169,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         ],
       }))
     },
+    updateRoom: (patch) =>
+      setState((s) => ({
+        ...s,
+        rooms: s.rooms.map((r) => (r.id === roomId ? { ...r, ...patch } : r)),
+      })),
     joinRoom: (code) => {
       const target = state.rooms.find((r) => r.code.toUpperCase() === code.trim().toUpperCase())
       if (!target) return false
