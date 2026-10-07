@@ -80,7 +80,7 @@ export function CreateRoomPage() {
           </Field>
           <div className="flex flex-wrap gap-2">
             {['Dorm 204', 'Apt 3B', 'The Blue House'].map((idea) => (
-              <button key={idea} type="button" className="text-caption rounded-pill border border-rule bg-paper px-2 py-1 hover:border-ink" onClick={() => setName(idea)}>
+              <button key={idea} type="button" className="text-caption rounded-pill border border-rule bg-paper px-2 py-1 hover:border-accent" onClick={() => setName(idea)}>
                 {idea}
               </button>
             ))}

@@ -1,7 +1,7 @@
 import type { User } from '../data/types'
 import { initials } from '../lib/format'
 
-const tones = ['bg-brand text-on-color', 'bg-accent text-on-color', 'bg-highlight text-ink', 'bg-ink text-on-color']
+const tones = ['bg-brand text-on-color', 'bg-accent text-on-color']
 
 function toneFor(id: string) {
   let hash = 0

@@ -69,7 +69,7 @@ export function RoomHomePage() {
           <ul className="flex flex-col gap-2">
             {needsMe.map((iou) => (
               <li key={iou.id}>
-                <Link to={`/money/ious/${iou.id}`} className="flex flex-wrap items-center gap-4 rounded-md border border-highlight bg-surface p-4 hover:border-ink">
+                <Link to={`/money/ious/${iou.id}`} className="flex flex-wrap items-center gap-4 rounded-md border border-brand bg-surface p-4 hover:bg-paper">
                   <span className="text-body flex-1">
                     {nameOf(iou.debtor === me!.id ? iou.creditor : iou.debtor)} {iou.previous ? 'suggests' : 'says'} {iou.debtor === me!.id ? 'you owe them' : 'they owe you'}{' '}
                     {iou.kind === 'money' ? <span className="text-amount">{formatMoney(iou.amountCents)}</span> : iou.favor} for “{iou.note}”

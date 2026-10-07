@@ -27,7 +27,7 @@ export function Select(props: SelectHTMLAttributes<HTMLSelectElement>) {
 /** A bordered row with a radio or checkbox, for picking one of a few options. */
 export function ChoiceRow({ children, ...props }: InputHTMLAttributes<HTMLInputElement> & { children: ReactNode }) {
   return (
-    <label className="flex cursor-pointer items-center gap-4 rounded-md border border-rule bg-surface p-4 has-[:checked]:border-ink">
+    <label className="flex cursor-pointer items-center gap-4 rounded-md border border-rule bg-surface p-4 has-[:checked]:border-accent">
       <input className="size-4 accent-accent" {...props} />
       <span className="flex min-w-0 flex-1 flex-col gap-1">{children}</span>
     </label>

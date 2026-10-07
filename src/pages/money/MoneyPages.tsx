@@ -29,7 +29,7 @@ function IouRow({ iou }: { iou: Iou }) {
   const sentence = useIouSentence()
   const owedToMe = iou.creditor === me!.id
   return (
-    <Link to={`/money/ious/${iou.id}`} className="flex flex-wrap items-center gap-4 rounded-md border border-rule bg-surface p-4 hover:border-ink">
+    <Link to={`/money/ious/${iou.id}`} className="flex flex-wrap items-center gap-4 rounded-md border border-rule bg-surface p-4 hover:border-accent">
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <span className="text-body">{sentence(iou)}{iou.kind === 'favor' && ` ${iou.favor}`}</span>
         <span className="text-caption text-ink-muted">{formatDate(iou.date)} · {iou.note}</span>
@@ -61,8 +61,8 @@ export function MoneyPage() {
         <p className="text-caption text-ink-muted">Overall</p>
         <p className="text-heading">
           {net === 0 && 'You’re all square'}
-          {net > 0 && <>You’re owed <span className="rounded-md bg-highlight px-1 font-mono">{formatMoney(net)}</span></>}
-          {net < 0 && <>You owe <span className="rounded-md bg-highlight px-1 font-mono">{formatMoney(-net)}</span></>}
+          {net > 0 && <>You’re owed <span className="font-mono text-accent">{formatMoney(net)}</span></>}
+          {net < 0 && <>You owe <span className="font-mono text-brand">{formatMoney(-net)}</span></>}
         </p>
       </section>
 
@@ -215,7 +215,7 @@ export function LogIouPage() {
                 role="radio"
                 aria-checked={kind === k}
                 onClick={() => setKind(k)}
-                className={`text-label rounded-sm px-4 py-1 ${kind === k ? 'bg-ink text-on-color' : 'text-ink-muted'}`}
+                className={`text-label rounded-sm px-4 py-1 ${kind === k ? 'bg-accent text-on-color' : 'text-ink-muted'}`}
               >
                 {k === 'money' ? 'Money' : 'Something else'}
               </button>
@@ -333,7 +333,7 @@ export function IouDetailPage() {
           </p>
         )}
         {iConfirm && (
-          <div className="flex flex-col gap-4 rounded-md border border-highlight bg-paper p-4">
+          <div className="flex flex-col gap-4 rounded-md border border-brand bg-paper p-4">
             {suggesting ? (
               <SuggestChangeForm iou={iou} otherName={nameOf(otherId)} onCancel={() => setSuggesting(false)} />
             ) : (

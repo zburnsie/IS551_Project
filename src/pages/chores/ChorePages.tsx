@@ -57,7 +57,7 @@ export function ChoresIndexPage() {
               const unassigned = chores.filter((c) => !c.assignedTo).length
               return (
                 <li key={list.id}>
-                  <Link to={`/chores/lists/${list.id}`} className="flex h-full flex-col gap-2 rounded-md border border-rule bg-surface p-4 hover:border-ink">
+                  <Link to={`/chores/lists/${list.id}`} className="flex h-full flex-col gap-2 rounded-md border border-rule bg-surface p-4 hover:border-accent">
                     <span className="text-heading">{list.name}</span>
                     <span className="flex flex-wrap gap-2">
                       <Tag>{open} open</Tag>
@@ -108,7 +108,7 @@ export function CreateChoreListPage() {
           </Field>
           <div className="flex flex-wrap gap-2">
             {['Kitchen', 'Bathroom', 'Common area', 'Weekly reset'].map((idea) => (
-              <button key={idea} type="button" className="text-caption rounded-pill border border-rule bg-paper px-2 py-1 hover:border-ink" onClick={() => setName(idea)}>
+              <button key={idea} type="button" className="text-caption rounded-pill border border-rule bg-paper px-2 py-1 hover:border-accent" onClick={() => setName(idea)}>
                 {idea}
               </button>
             ))}
@@ -202,7 +202,7 @@ export function AddChorePage() {
           </Field>
           <div className="flex flex-wrap gap-2">
             {[0, 1, 7].map((n) => (
-              <button key={n} type="button" className="text-caption rounded-pill border border-rule bg-paper px-2 py-1 hover:border-ink" onClick={() => setDueDate(addDays(todayIso(), n))}>
+              <button key={n} type="button" className="text-caption rounded-pill border border-rule bg-paper px-2 py-1 hover:border-accent" onClick={() => setDueDate(addDays(todayIso(), n))}>
                 {n === 0 ? 'Today' : n === 1 ? 'Tomorrow' : 'In a week'}
               </button>
             ))}

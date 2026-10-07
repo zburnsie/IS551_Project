@@ -124,7 +124,7 @@ export function AppLayout() {
                 key={link.to}
                 to={link.to}
                 className={({ isActive }) =>
-                  `text-label whitespace-nowrap rounded-md px-4 py-2 ${isActive ? 'bg-ink text-on-color' : 'text-ink-muted hover:text-ink'}`
+                  `text-label whitespace-nowrap rounded-md px-4 py-2 ${isActive ? 'bg-accent text-on-color' : 'text-ink-muted hover:text-ink'}`
                 }
               >
                 {link.label}

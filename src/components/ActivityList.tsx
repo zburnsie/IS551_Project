@@ -20,7 +20,7 @@ export function ActivityList({ items, showUnread = false }: { items: Activity[];
               <span className="text-body">{describeActivity(a, nameOf)}</span>
               <span className="text-caption text-ink-muted">{formatTimestamp(a.at)}</span>
             </div>
-            {showUnread && !a.readBy.includes(me!.id) && <Tag tone="highlight">New</Tag>}
+            {showUnread && !a.readBy.includes(me!.id) && <Tag tone="brand">New</Tag>}
           </div>
         )
         return <li key={a.id}>{link ? <Link to={link} className="block hover:bg-paper">{body}</Link> : body}</li>

@@ -1,11 +1,10 @@
 import type { ReactNode } from 'react'
 
-type Tone = 'brand' | 'accent' | 'highlight' | 'neutral'
+type Tone = 'brand' | 'accent' | 'neutral'
 
 const tones: Record<Tone, string> = {
   brand: 'bg-brand text-on-color',
   accent: 'bg-accent text-on-color',
-  highlight: 'bg-highlight text-ink',
   neutral: 'bg-paper text-ink-muted border border-rule',
 }
 
