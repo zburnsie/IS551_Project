@@ -22,9 +22,9 @@ function Shell({ header, children }: { header: ReactNode; children: ReactNode })
     window.scrollTo(0, 0)
   }, [pathname])
   return (
-    <div className="min-h-screen bg-paper pb-24 text-ink">
+    <div className="flex min-h-screen flex-col bg-paper text-ink">
       <header className="border-b border-rule bg-surface">{header}</header>
-      {children}
+      <div className="flex-1">{children}</div>
       <PrototypeBar />
     </div>
   )
