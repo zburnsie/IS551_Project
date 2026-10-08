@@ -5,9 +5,10 @@ import { Avatar } from '../../components/Avatar'
 import { Button, ButtonLink } from '../../components/Button'
 import { Card, Section } from '../../components/Card'
 import { ChoiceRow, Field, Select, TextInput } from '../../components/fields'
-import { EmptyState, Flash, PageHeader } from '../../components/PageHeader'
+import { EmptyState, PageHeader } from '../../components/PageHeader'
 import { IouStatusTag } from '../../components/status'
 import { Tag } from '../../components/Tag'
+import { Toast, type ToastState } from '../../components/Toast'
 import { useApp } from '../../data/store'
 import type { Iou } from '../../data/types'
 import { iouValue, moneyBalance, openIousBetween, paidMarkNeeded } from '../../lib/balances'
@@ -24,21 +25,73 @@ function useIouSentence() {
   return (iou: Iou) => `${nameOf(iou.debtor)} ${nameOf(iou.debtor) === 'You' ? 'owe' : 'owes'} ${nameOf(iou.creditor, true)}`
 }
 
+/** Confirmation shown after sending an IOU to a roommate, with a way back to the money page. */
+function sentToast(name: string): { toast: ToastState } {
+  return { toast: { message: `Sent to ${name} to confirm.`, link: { to: '/money', label: 'Back to money' } } }
+}
+
+/** Marks IOUs with a roommate as paid and confirms it with a toast on the current page. */
+function useMarkPaid() {
+  const { nameOf, markPaidWith } = useApp()
+  const navigate = useNavigate()
+  return (otherId: string, toMark: Iou[]) => {
+    if (toMark.length === 0) return
+    const name = nameOf(otherId)
+    // An IOU settles once both sides have marked it, so these clear if the roommate already has.
+    const settles = toMark.every((i) => i.paidMarks.includes(otherId))
+    const what = toMark.length === 1 ? iouValue(toMark[0]) : `${toMark.length} IOUs`
+    markPaidWith(otherId, toMark.map((i) => i.id))
+    const message = settles ? `Settled ${what} with ${name}.` : `Marked ${what} as paid. Waiting for ${name} to confirm.`
+    navigate('.', { replace: true, state: { toast: { message } satisfies ToastState } })
+  }
+}
+
+/** A non-money IOU ("a dinner"), marked with a gift symbol so it never reads as a dollar amount. */
+function FavorMark({ favor, owedToMe, label }: { favor: string; owedToMe: boolean; label?: string }) {
+  return (
+    <span className={`text-label inline-flex items-center gap-1 ${owedToMe ? 'text-accent' : 'text-brand'}`}>
+      <svg aria-hidden="true" viewBox="0 0 16 16" className="size-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round">
+        <rect x="2" y="6" width="12" height="3" />
+        <path d="M3 9v5h10V9M8 6v8M8 6C6.5 6 4.5 5.5 4.5 3.75S7 2 8 6Zm0 0c1.500 0 3.500-.5 3.500-2.250S9 2 8 6Z" />
+      </svg>
+      {label && <span className="sr-only">{label} </span>}
+      {favor}
+    </span>
+  )
+}
+
+/** One IOU in a list. The row opens the IOU; open ones can also be marked paid right here. */
 function IouRow({ iou }: { iou: Iou }) {
   const { me } = useApp()
+  const markPaid = useMarkPaid()
   const sentence = useIouSentence()
   const owedToMe = iou.creditor === me!.id
+  const otherId = owedToMe ? iou.debtor : iou.creditor
+  const canMark = iou.status === 'open' && !iou.paidMarks.includes(me!.id)
+  const theyMarked = iou.paidMarks.includes(otherId)
   return (
-    <Link to={`/money/ious/${iou.id}`} className="flex flex-wrap items-center gap-4 rounded-md border border-rule bg-surface p-4 hover:border-accent">
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <span className="text-body">{sentence(iou)}{iou.kind === 'favor' && ` ${iou.favor}`}</span>
-        <span className="text-caption text-ink-muted">{formatDate(iou.date)} · {iou.note}</span>
-      </div>
-      <IouStatusTag iou={iou} />
-      {iou.kind === 'money' && (
-        <span className={`text-amount text-right ${owedToMe ? 'text-accent' : 'text-brand'}`}>{formatMoney(iou.amountCents)}</span>
+    <div className="flex flex-col rounded-md border border-rule bg-surface hover:border-accent sm:flex-row sm:items-center">
+      <Link to={`/money/ious/${iou.id}`} className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 p-4 sm:flex sm:gap-4">
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <span className="text-body">{sentence(iou)}{iou.kind === 'favor' && ` ${iou.favor}`}</span>
+          <span className="text-caption text-ink-muted">{formatDate(iou.date)} · {iou.note}</span>
+        </div>
+        {/* On phones the status drops below, so the sentence and amount share the top line. */}
+        <span className="order-last col-span-2 sm:order-none"><IouStatusTag iou={iou} /></span>
+        {iou.kind === 'money' ? (
+          <span className={`text-amount text-right ${owedToMe ? 'text-accent' : 'text-brand'}`}>{formatMoney(iou.amountCents)}</span>
+        ) : (
+          <FavorMark favor={iou.favor} owedToMe={owedToMe} />
+        )}
+      </Link>
+      {canMark && (
+        <div className="flex flex-col px-4 pb-4 sm:py-4 sm:pl-0">
+          <Button variant={theyMarked ? 'primary' : 'accent'} onClick={() => markPaid(otherId, [iou])}>
+            {theyMarked ? 'Confirm paid' : 'Mark paid'}
+          </Button>
+        </div>
       )}
-    </Link>
+    </div>
   )
 }
 
@@ -54,7 +107,7 @@ export function MoneyPage() {
   return (
     <>
       <PageHeader title="Money and IOUs" action={<ButtonLink to="/money/new" variant="accent">Log an IOU</ButtonLink>} />
-      <Flash />
+      <Toast />
 
       <Section title="Balances">
         {others.length === 0 ? (
@@ -69,30 +122,32 @@ export function MoneyPage() {
               const open = openIousBetween(ious, me!.id, m.id)
               const favors = open.filter((i) => i.kind === 'favor')
               const name = m.name.split(' ')[0]
+              // Direction is shown by color (green: owed to you, red: you owe), with words for screen readers only.
+              const direction = cents > 0 ? `${name} owes you` : cents < 0 ? `You owe ${name}` : ''
               return (
                 <li key={m.id}>
-                  <Card className="flex flex-wrap items-center gap-4">
+                  <Card className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 sm:flex">
                     <Avatar user={m} />
                     <div className="flex min-w-0 flex-1 flex-col gap-1">
                       <span className="text-body">
-                        {cents > 0 && `${name} owes you`}
-                        {cents < 0 && `You owe ${name}`}
-                        {cents === 0 && `You and ${name} are even on money`}
-                      </span>
-                      <span className="flex flex-wrap gap-1">
-                        {cents > 0 && <Tag tone="accent">Owed to you</Tag>}
-                        {cents < 0 && <Tag tone="brand">You owe</Tag>}
-                        {cents === 0 && open.length === 0 && <Tag>Settled</Tag>}
-                        {favors.map((f) => (
-                          <Tag key={f.id}>{f.debtor === me!.id ? `You owe ${f.favor}` : `Owes you ${f.favor}`}</Tag>
-                        ))}
+                        {open.length === 0 ? `No outstanding balance with ${name}` : `Outstanding balance with ${name}`}
                       </span>
                     </div>
-                    <span className="text-amount text-right">{formatMoney(Math.abs(cents))}</span>
+                    <div className="flex flex-col items-end gap-1">
+                      {(cents !== 0 || favors.length === 0) && (
+                        <span className={`text-amount ${cents > 0 ? 'text-accent' : cents < 0 ? 'text-brand' : ''}`}>
+                          {direction && <span className="sr-only">{direction} </span>}
+                          {formatMoney(Math.abs(cents))}
+                        </span>
+                      )}
+                      {favors.map((f) => (
+                        <FavorMark key={f.id} favor={f.favor} owedToMe={f.creditor === me!.id} label={f.debtor === me!.id ? `You owe ${name}` : `${name} owes you`} />
+                      ))}
+                    </div>
                     {open.length > 0 ? (
-                      <ButtonLink to={`/money/settle/${m.id}`} variant={paidMarkNeeded(ious, me!.id, m.id) ? 'primary' : 'accent'}>Settle up</ButtonLink>
+                      <ButtonLink to={`/money/settle/${m.id}`} variant={paidMarkNeeded(ious, me!.id, m.id) ? 'primary' : 'accent'} className="col-span-3">Settle up</ButtonLink>
                     ) : (
-                      <Button variant="secondary" disabled>Settle up</Button>
+                      <Button variant="secondary" disabled className="col-span-3">Settle up</Button>
                     )}
                   </Card>
                 </li>
@@ -170,7 +225,7 @@ export function LogIouPage() {
       favor: kind === 'favor' ? favor.trim() : '',
       note: note.trim(),
     })
-    navigate(`/money/ious/${id}`, { state: { flash: `Sent to ${otherName} to confirm.` } })
+    navigate(`/money/ious/${id}`, { state: sentToast(otherName) })
   }
 
   return (
@@ -241,6 +296,7 @@ export function LogIouPage() {
 /** Lets the roommate being asked propose a different amount (or a different favor) instead. */
 function SuggestChangeForm({ iou, otherName, onCancel }: { iou: Iou; otherName: string; onCancel: () => void }) {
   const { suggestIouChange } = useApp()
+  const navigate = useNavigate()
   const [amount, setAmount] = useState(iou.kind === 'money' ? (iou.amountCents / 100).toFixed(2) : '')
   const [favor, setFavor] = useState(iou.favor)
   const amountCents = Math.round(Number(amount) * 100)
@@ -251,6 +307,7 @@ function SuggestChangeForm({ iou, otherName, onCancel }: { iou: Iou; otherName: 
     if (!changed) return
     suggestIouChange(iou.id, iou.kind === 'money' ? { amountCents, favor: '' } : { amountCents: 0, favor: favor.trim() })
     onCancel()
+    navigate('.', { replace: true, state: sentToast(otherName) })
   }
 
   return (
@@ -276,11 +333,12 @@ function SuggestChangeForm({ iou, otherName, onCancel }: { iou: Iou; otherName: 
 export function IouDetailPage() {
   const { iouId = '' } = useParams()
   const { state, me, nameOf, userOf, respondToIou, withdrawIou } = useApp()
-  const navigate = useNavigate()
   const sentence = useIouSentence()
   const [suggesting, setSuggesting] = useState(false)
+  const [withdrawn, setWithdrawn] = useState(false)
   const iou = state.ious.find((i) => i.id === iouId)
-  if (!iou) return <Navigate to="/money" replace />
+  // Withdrawing removes the IOU, which lands here; carry the confirmation along with the redirect.
+  if (!iou) return <Navigate to="/money" replace state={withdrawn ? { toast: { message: 'IOU withdrawn.' } satisfies ToastState } : undefined} />
 
   const otherId = iou.debtor === me!.id ? iou.creditor : iou.debtor
   const involved = iou.debtor === me!.id || iou.creditor === me!.id
@@ -291,13 +349,11 @@ export function IouDetailPage() {
   return (
     <>
       <PageHeader eyebrow={`IOU · ${formatDate(iou.date)}`} title={`${sentence(iou)} ${iouValue(iou)}`} back={{ to: '/money', label: 'Money' }} />
-      <Flash />
+      <Toast />
 
       <Card className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center gap-2">
           <IouStatusTag iou={iou} />
-          {iou.creditor === me!.id && <Tag tone="accent">Owed to you</Tag>}
-          {iou.debtor === me!.id && <Tag tone="brand">You owe</Tag>}
         </div>
         <dl className="grid gap-4 sm:grid-cols-3">
           <div className="flex flex-col gap-1">
@@ -348,8 +404,8 @@ export function IouDetailPage() {
             {iou.createdBy === me!.id && <Button
               variant="secondary"
               onClick={() => {
+                setWithdrawn(true)
                 withdrawIou(iou.id)
-                navigate('/money', { state: { flash: 'IOU withdrawn.' } })
               }}
             >
               Withdraw
@@ -380,7 +436,8 @@ export function IouDetailPage() {
 /** Settle up with one roommate. Both of you mark it paid before it clears. */
 export function SettleUpPage() {
   const { userId = '' } = useParams()
-  const { me, userOf, markPaidWith } = useApp()
+  const { me, userOf } = useApp()
+  const markPaidAndToast = useMarkPaid()
   const ious = useRoomIous()
   const [justSettled, setJustSettled] = useState(false)
   const other = userOf(userId)
@@ -388,20 +445,20 @@ export function SettleUpPage() {
 
   const name = other.name.split(' ')[0]
   const open = openIousBetween(ious, me!.id, other.id)
-  const cents = moneyBalance(ious, me!.id, other.id)
   const toMark = open.filter((i) => !i.paidMarks.includes(me!.id))
   const waiting = open.filter((i) => i.paidMarks.includes(me!.id)).length
 
-  const markPaid = (iouIds: string[]) => {
+  const markPaid = (toMark: Iou[]) => {
     // Nothing will be left open if this covers everything and the other side already marked it all.
-    if (open.every((i) => i.paidMarks.includes(other.id) && iouIds.includes(i.id))) setJustSettled(true)
-    markPaidWith(other.id, iouIds)
+    if (open.every((i) => i.paidMarks.includes(other.id) && toMark.includes(i))) setJustSettled(true)
+    markPaidAndToast(other.id, toMark)
   }
 
   if (open.length === 0) {
     return (
       <>
         <PageHeader title={`Settle up with ${name}`} back={{ to: '/money', label: 'Money' }} />
+        <Toast />
         {justSettled ? (
           <section className="flex flex-col items-start gap-4 rounded-md border border-accent bg-surface p-8">
             <Tag tone="accent">Settled</Tag>
@@ -424,15 +481,7 @@ export function SettleUpPage() {
       <PageHeader title={`Settle up with ${name}`} back={{ to: '/money', label: 'Money' }}>
         Pay {name} back however you like — cash, Venmo, or that dinner. Then you each mark what’s been paid, one item at a time or all at once.
       </PageHeader>
-
-      <Card className="flex flex-col gap-2">
-        <span className="text-caption text-ink-muted">Money</span>
-        <p className="text-heading">
-          {cents > 0 && <>{name} owes you <span className="font-mono">{formatMoney(cents)}</span></>}
-          {cents < 0 && <>You owe {name} <span className="font-mono">{formatMoney(-cents)}</span></>}
-          {cents === 0 && 'Even on money'}
-        </p>
-      </Card>
+      <Toast />
 
       <Section title="What you’re settling">
         <ul className="flex flex-col divide-y divide-rule rounded-md border border-rule bg-surface">
@@ -440,7 +489,7 @@ export function SettleUpPage() {
             const iMarked = i.paidMarks.includes(me!.id)
             const theyMarked = i.paidMarks.includes(other.id)
             return (
-              <li key={i.id} className="flex flex-wrap items-center gap-4 p-4">
+              <li key={i.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 p-4 sm:flex">
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
                   <span className="text-body">{i.note}</span>
                   <span className="text-caption text-ink-muted">
@@ -448,11 +497,11 @@ export function SettleUpPage() {
                     {theyMarked && ` · ${name} marked it paid`}
                   </span>
                 </div>
-                <span className={i.kind === 'money' ? 'text-amount' : 'text-body'}>{iouValue(i)}</span>
+                {i.kind === 'money' ? <span className="text-amount">{iouValue(i)}</span> : <FavorMark favor={i.favor} owedToMe={i.creditor === me!.id} />}
                 {iMarked ? (
-                  <Tag tone="accent">You marked paid</Tag>
+                  <span className="col-span-2"><Tag tone="accent">You marked paid</Tag></span>
                 ) : (
-                  <Button variant={theyMarked ? 'primary' : 'accent'} onClick={() => markPaid([i.id])}>
+                  <Button variant={theyMarked ? 'primary' : 'accent'} className="col-span-2" onClick={() => markPaid([i])}>
                     {theyMarked ? 'Confirm paid' : 'Mark paid'}
                   </Button>
                 )}
@@ -461,7 +510,7 @@ export function SettleUpPage() {
           })}
         </ul>
         {toMark.length > 1 && (
-          <Button variant="secondary" className="self-start" onClick={() => markPaid(toMark.map((i) => i.id))}>
+          <Button variant="secondary" className="self-start" onClick={() => markPaid(toMark)}>
             Mark all {toMark.length} as paid
           </Button>
         )}
