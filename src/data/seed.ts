@@ -48,10 +48,10 @@ export function demoState(): AppState {
     chores: [
       { id: 'trash', listId: 'kitchen', title: 'Take out trash and recycling', notes: 'Bins go to the chute at the end of the hall.', dueDate: d(0), repeat: 'weekly', rotation: everyone, assignedTo: 'alex', done: false },
       { id: 'dishes', listId: 'kitchen', title: 'Run and empty the dishwasher', notes: '', dueDate: d(1), repeat: 'daily', rotation: ['maya', 'sam'], assignedTo: 'maya', done: false },
-      { id: 'fridge', listId: 'kitchen', title: 'Clear out the fridge', notes: 'Anything unlabeled and older than a week goes.', dueDate: d(5), repeat: 'none', rotation: [], assignedTo: null, done: false },
+      { id: 'fridge', listId: 'kitchen', title: 'Wipe down the sink', notes: 'Wipe the basin and faucet after dinner.', dueDate: d(1), repeat: 'none', rotation: [], assignedTo: 'alex', done: false },
       { id: 'bath', listId: 'bathroom', title: 'Clean the bathroom', notes: 'Sink, mirror, toilet and shower.', dueDate: d(2), repeat: 'weekly', rotation: ['jordan', 'alex', 'maya', 'sam'], assignedTo: 'jordan', done: false },
       { id: 'tp', listId: 'bathroom', title: 'Restock toilet paper', notes: '', dueDate: d(-1), repeat: 'none', rotation: ['sam'], assignedTo: 'sam', done: true },
-      { id: 'vacuum', listId: 'common', title: 'Vacuum the common room', notes: '', dueDate: d(4), repeat: 'biweekly', rotation: ['sam', 'jordan', 'alex', 'maya'], assignedTo: 'sam', done: false },
+      { id: 'vacuum', listId: 'common', title: 'Vacuum the living room', notes: '', dueDate: d(2), repeat: 'biweekly', rotation: ['alex', 'sam', 'jordan', 'maya'], assignedTo: 'alex', done: false },
     ],
     ious: [
       { id: 'pizza', roomId: room, debtor: 'maya', creditor: 'alex', kind: 'money', amountCents: 2000, favor: '', note: 'Pizza on Friday', createdBy: 'alex', waitingOn: 'maya', date: d(-3), status: 'open', paidMarks: [] },
