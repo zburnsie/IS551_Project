@@ -10,7 +10,7 @@ import { IouStatusTag } from '../../components/status'
 import { Tag } from '../../components/Tag'
 import { useApp } from '../../data/store'
 import type { Iou } from '../../data/types'
-import { iouValue, moneyBalance, openIousBetween } from '../../lib/balances'
+import { iouValue, moneyBalance, openIousBetween, paidMarkNeeded } from '../../lib/balances'
 import { formatDate, formatMoney } from '../../lib/format'
 
 function useRoomIous() {
@@ -48,23 +48,13 @@ export function MoneyPage() {
   const ious = useRoomIous()
   const others = members.slice(1)
   const mine = ious.filter((i) => i.debtor === me!.id || i.creditor === me!.id)
-  const net = others.reduce((sum, m) => sum + moneyBalance(ious, me!.id, m.id), 0)
   const pending = mine.filter((i) => i.status === 'pending')
   const settled = mine.filter((i) => i.status === 'settled' || i.status === 'declined')
 
   return (
     <>
-      <PageHeader title="Money and IOUs" action={<ButtonLink to="/money/new">Log an IOU</ButtonLink>} />
+      <PageHeader title="Money and IOUs" action={<ButtonLink to="/money/new" variant="accent">Log an IOU</ButtonLink>} />
       <Flash />
-
-      <section className="flex flex-col gap-2">
-        <p className="text-caption text-ink-muted">Overall</p>
-        <p className="text-heading">
-          {net === 0 && 'You’re all square'}
-          {net > 0 && <>You’re owed <span className="font-mono text-accent">{formatMoney(net)}</span></>}
-          {net < 0 && <>You owe <span className="font-mono text-brand">{formatMoney(-net)}</span></>}
-        </p>
-      </section>
 
       <Section title="Balances">
         {others.length === 0 ? (
@@ -100,7 +90,7 @@ export function MoneyPage() {
                     </div>
                     <span className="text-amount text-right">{formatMoney(Math.abs(cents))}</span>
                     {open.length > 0 ? (
-                      <ButtonLink to={`/money/settle/${m.id}`} variant="secondary">Settle up</ButtonLink>
+                      <ButtonLink to={`/money/settle/${m.id}`} variant={paidMarkNeeded(ious, me!.id, m.id) ? 'primary' : 'accent'}>Settle up</ButtonLink>
                     ) : (
                       <Button variant="secondary" disabled>Settle up</Button>
                     )}
@@ -158,7 +148,7 @@ export function LogIouPage() {
         <PageHeader title="Log an IOU" back={{ to: '/money', label: 'Money' }} />
         <EmptyState title="No roommates yet">
           <p className="text-body text-ink-muted">IOUs are between you and a roommate. Invite someone first.</p>
-          <ButtonLink to="/room/invite">Invite roommates</ButtonLink>
+          <ButtonLink to="/room/invite" variant="accent">Invite roommates</ButtonLink>
         </EmptyState>
       </>
     )
@@ -241,7 +231,7 @@ export function LogIouPage() {
           </p>
         )}
         <div>
-          <Button type="submit" disabled={!canSubmit}>Send to {otherName}</Button>
+          <Button type="submit" variant="accent" disabled={!canSubmit}>Send to {otherName}</Button>
         </div>
       </form>
     </>
@@ -275,7 +265,7 @@ function SuggestChangeForm({ iou, otherName, onCancel }: { iou: Iou; otherName: 
         </Field>
       )}
       <div className="flex flex-wrap gap-2">
-        <Button type="submit" disabled={!changed}>Send to {otherName}</Button>
+        <Button type="submit" variant="accent" disabled={!changed}>Send to {otherName}</Button>
         <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>
       </div>
     </form>
@@ -342,7 +332,7 @@ export function IouDetailPage() {
                   {iou.previous ? `Does ${iouValue(iou)} work for you?` : `${nameOf(iou.createdBy)} logged this. Does it look right to you?`}
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  <Button variant="accent" onClick={() => respondToIou(iou.id, true)}>Yes, confirm</Button>
+                  <Button onClick={() => respondToIou(iou.id, true)}>Yes, confirm</Button>
                   <Button variant="secondary" onClick={() => setSuggesting(true)}>
                     {iou.kind === 'money' ? 'Suggest a different amount' : 'Suggest something else'}
                   </Button>
@@ -373,7 +363,7 @@ export function IouDetailPage() {
               {iou.paidMarks.includes(me!.id) && `You marked it paid. Waiting for ${nameOf(otherId)}.`}
               {iou.paidMarks.includes(otherId) && `${nameOf(otherId)} marked it paid. Confirm on the settle-up screen.`}
             </p>
-            <ButtonLink to={`/money/settle/${otherId}`}>Settle up</ButtonLink>
+            <ButtonLink to={`/money/settle/${otherId}`} variant={iou.paidMarks.includes(otherId) && !iou.paidMarks.includes(me!.id) ? 'primary' : 'accent'}>Settle up</ButtonLink>
           </div>
         )}
         {iou.status === 'declined' && <p className="text-body text-ink-muted">This IOU was declined, so it doesn’t count toward anyone’s balance.</p>}
@@ -399,8 +389,14 @@ export function SettleUpPage() {
   const name = other.name.split(' ')[0]
   const open = openIousBetween(ious, me!.id, other.id)
   const cents = moneyBalance(ious, me!.id, other.id)
-  const iMarked = open.length > 0 && open.every((i) => i.paidMarks.includes(me!.id))
-  const theyMarked = open.length > 0 && open.every((i) => i.paidMarks.includes(other.id))
+  const toMark = open.filter((i) => !i.paidMarks.includes(me!.id))
+  const waiting = open.filter((i) => i.paidMarks.includes(me!.id)).length
+
+  const markPaid = (iouIds: string[]) => {
+    // Nothing will be left open if this covers everything and the other side already marked it all.
+    if (open.every((i) => i.paidMarks.includes(other.id) && iouIds.includes(i.id))) setJustSettled(true)
+    markPaidWith(other.id, iouIds)
+  }
 
   if (open.length === 0) {
     return (
@@ -411,7 +407,7 @@ export function SettleUpPage() {
             <Tag tone="accent">Settled</Tag>
             <h2 className="text-title">You and {name} are all square</h2>
             <p className="text-body text-ink-muted">You both marked everything as paid.</p>
-            <ButtonLink to="/money">Back to money</ButtonLink>
+            <ButtonLink to="/money" variant="accent">Back to money</ButtonLink>
           </section>
         ) : (
           <EmptyState title="Nothing to settle">
@@ -426,7 +422,7 @@ export function SettleUpPage() {
   return (
     <>
       <PageHeader title={`Settle up with ${name}`} back={{ to: '/money', label: 'Money' }}>
-        Pay {name} back however you like — cash, Venmo, or that dinner. Then you both mark it paid here.
+        Pay {name} back however you like — cash, Venmo, or that dinner. Then you each mark what’s been paid, one item at a time or all at once.
       </PageHeader>
 
       <Card className="flex flex-col gap-2">
@@ -440,46 +436,39 @@ export function SettleUpPage() {
 
       <Section title="What you’re settling">
         <ul className="flex flex-col divide-y divide-rule rounded-md border border-rule bg-surface">
-          {open.map((i) => (
-            <li key={i.id} className="flex flex-wrap items-center gap-4 p-4">
-              <div className="flex min-w-0 flex-1 flex-col gap-1">
-                <span className="text-body">{i.note}</span>
-                <span className="text-caption text-ink-muted">{formatDate(i.date)} · {i.creditor === me!.id ? `${name} owes you` : `You owe ${name}`}</span>
-              </div>
-              <span className={i.kind === 'money' ? 'text-amount' : 'text-body'}>{iouValue(i)}</span>
-            </li>
-          ))}
+          {open.map((i) => {
+            const iMarked = i.paidMarks.includes(me!.id)
+            const theyMarked = i.paidMarks.includes(other.id)
+            return (
+              <li key={i.id} className="flex flex-wrap items-center gap-4 p-4">
+                <div className="flex min-w-0 flex-1 flex-col gap-1">
+                  <span className="text-body">{i.note}</span>
+                  <span className="text-caption text-ink-muted">
+                    {formatDate(i.date)} · {i.creditor === me!.id ? `${name} owes you` : `You owe ${name}`}
+                    {theyMarked && ` · ${name} marked it paid`}
+                  </span>
+                </div>
+                <span className={i.kind === 'money' ? 'text-amount' : 'text-body'}>{iouValue(i)}</span>
+                {iMarked ? (
+                  <Tag tone="accent">You marked paid</Tag>
+                ) : (
+                  <Button variant={theyMarked ? 'primary' : 'accent'} onClick={() => markPaid([i.id])}>
+                    {theyMarked ? 'Confirm paid' : 'Mark paid'}
+                  </Button>
+                )}
+              </li>
+            )
+          })}
         </ul>
-      </Section>
-
-      <Section title="Mark as paid">
-        <ol className="flex flex-col gap-2">
-          {[
-            { user: me!, label: 'You', done: iMarked },
-            { user: other, label: name, done: theyMarked },
-          ].map((row) => (
-            <li key={row.user.id} className="flex items-center gap-4 rounded-md border border-rule bg-surface p-4">
-              <Avatar user={row.user} />
-              <span className="text-body flex-1">{row.label}</span>
-              {row.done ? <Tag tone="accent">Marked paid</Tag> : <Tag>Not yet</Tag>}
-            </li>
-          ))}
-        </ol>
-        {iMarked ? (
-          <p className="text-body text-ink-muted">
-            Waiting for {name} to mark it paid too. Prototype: use “Acting as” in the bar below to switch to {name}.
-          </p>
-        ) : (
-          <Button
-            variant="accent"
-            className="self-start"
-            onClick={() => {
-              if (theyMarked) setJustSettled(true)
-              markPaidWith(other.id)
-            }}
-          >
-            {theyMarked ? `Confirm and settle with ${name}` : 'Mark as paid'}
+        {toMark.length > 1 && (
+          <Button variant="secondary" className="self-start" onClick={() => markPaid(toMark.map((i) => i.id))}>
+            Mark all {toMark.length} as paid
           </Button>
+        )}
+        {waiting > 0 && (
+          <p className="text-body text-ink-muted">
+            Waiting for {name} to mark {waiting === 1 ? 'it' : 'them'} paid too. Prototype: use “Acting as” in the bar below to switch to {name}.
+          </p>
         )}
       </Section>
     </>
