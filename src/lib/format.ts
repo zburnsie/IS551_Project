@@ -27,6 +27,16 @@ export function todayIso(): string {
   return toIso(new Date())
 }
 
+/** The local calendar date of a timestamp, e.g. "2026-10-09". */
+export function dateOf(timestamp: string): string {
+  return toIso(new Date(timestamp))
+}
+
+/** Whole days from one ISO date to another (negative if `to` is earlier). */
+export function daysBetween(from: string, to: string): number {
+  return Math.round((parseIso(to).getTime() - parseIso(from).getTime()) / 86_400_000)
+}
+
 export function addDays(isoDate: string, days: number): string {
   const date = parseIso(isoDate)
   date.setDate(date.getDate() + days)
@@ -41,7 +51,7 @@ export function addMonths(isoDate: string, months: number): string {
 
 /** Days from today until the given date (negative if past). */
 export function daysUntil(isoDate: string): number {
-  return Math.round((parseIso(isoDate).getTime() - parseIso(todayIso()).getTime()) / 86_400_000)
+  return daysBetween(todayIso(), isoDate)
 }
 
 export function initials(name: string): string {
@@ -52,4 +62,10 @@ export function initials(name: string): string {
 
 export function firstName(name: string): string {
   return name.trim().split(/\s+/)[0] || 'Someone'
+}
+
+/** "You", "You and Maya", "You, Maya and Sam". */
+export function joinNames(names: string[]): string {
+  if (names.length <= 1) return names[0] ?? ''
+  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`
 }
