@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApp } from '../data/store'
 import { buttonClass } from './Button'
@@ -12,8 +13,23 @@ const toolButton = buttonClass('secondary')
 export function PrototypeBar() {
   const { me, members, actAs, loadDemo, resetAll } = useApp()
   const navigate = useNavigate()
+  const bar = useRef<HTMLElement>(null)
+
+  // Publish the bar's height so floating UI (toasts) can sit above it.
+  useEffect(() => {
+    const el = bar.current
+    if (!el) return
+    const root = document.documentElement
+    const observer = new ResizeObserver(() => root.style.setProperty('--prototype-bar-height', `${el.offsetHeight}px`))
+    observer.observe(el)
+    return () => {
+      observer.disconnect()
+      root.style.removeProperty('--prototype-bar-height')
+    }
+  }, [])
+
   return (
-    <aside className="sticky bottom-0 z-10 border-t border-rule bg-surface text-ink" aria-label="Prototype notice and testing tools">
+    <aside ref={bar} className="sticky bottom-0 z-10 border-t border-rule bg-surface text-ink" aria-label="Prototype notice and testing tools">
       <div className="bg-brand text-on-color">
         <p className="text-label mx-auto flex max-w-3xl flex-wrap items-baseline gap-x-2 px-4 py-1 md:px-8">
           <span className="text-caption font-medium">Prototype · for testing only</span>

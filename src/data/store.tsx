@@ -70,7 +70,8 @@ type AppContextValue = {
   /** Sends the IOU back to the other roommate with a different amount (or favor) to confirm. */
   suggestIouChange: (iouId: string, change: { amountCents: number; favor: string }) => void
   withdrawIou: (iouId: string) => void
-  markPaidWith: (otherId: UserId) => void
+  /** Marks your side as paid on the open IOUs with a roommate — all of them, or just the ones listed. */
+  markPaidWith: (otherId: UserId, iouIds?: string[]) => void
 
   // Inbox
   markInboxRead: () => void
@@ -321,10 +322,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       )
     },
     withdrawIou: (iouId) => setState((s) => ({ ...s, ious: s.ious.filter((i) => i.id !== iouId) })),
-    markPaidWith: (otherId) => {
+    markPaidWith: (otherId, iouIds) => {
       const between = state.ious.filter(
         (i) =>
           i.status === 'open' &&
+          (!iouIds || iouIds.includes(i.id)) &&
           ((i.debtor === meId && i.creditor === otherId) || (i.debtor === otherId && i.creditor === meId)),
       )
       if (between.length === 0) return
