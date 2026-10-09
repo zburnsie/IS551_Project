@@ -57,21 +57,27 @@ Sign-in is simulated: passwords aren't checked or saved, and "Continue with your
 | | **Room** | |
 | 9 | Room home: your chores, balance, IOUs to confirm, activity | `/room` |
 | | **2. Shared chores** | |
-| 10 | Chore lists | `/chores` |
-| 11 | Create chore list | `/chores/lists/new` |
-| 12 | Chore list | `/chores/lists/:listId` |
-| 13 | Add chore (due date, repeat) | `/chores/lists/:listId/add` |
-| 14 | Assign roommate and rotation (assignee is notified) | `/chores/:choreId/assign` |
-| 15 | Chore detail: mark complete, rotation, history | `/chores/:choreId` |
-| 16 | Chore done: room sees it, next person in rotation | `/chores/:choreId/done` |
+| 10 | Areas (kitchen, a shared bathroom…) and who shares each | `/chores` |
+| 11 | House overview: progress, chores done per roommate, what's still to do and whose turn | `/chores/overview` |
+| 12 | Create area (everyone, or just some roommates) | `/chores/lists/new` |
+| 13 | Area: to do and done | `/chores/lists/:listId` |
+| 14 | Edit area: rename, change who shares it, delete | `/chores/lists/:listId/edit` |
+| 15 | Add chore (due date, repeat) | `/chores/lists/:listId/add` |
+| 16 | Assign roommate and rotation, from the area's roommates (assignee is notified) | `/chores/:choreId/assign` |
+| 17 | Chore detail: mark complete, rotation, done so far | `/chores/:choreId` |
+| 18 | Chore done: room sees it, next person in rotation | `/chores/:choreId/done` |
 | | **3. Money and IOUs** | |
-| 17 | Balances: who owes whom | `/money` |
-| 18 | Log an IOU ($ or "a dinner") | `/money/new` |
-| 19 | IOU detail: roommate confirms, declines, or suggests a different amount | `/money/ious/:iouId` |
-| 20 | Settle up: both mark as paid | `/money/settle/:userId` |
+| 19 | Balances: who owes whom | `/money` |
+| 20 | Log an IOU ($ or "a dinner") | `/money/new` |
+| 21 | IOU detail: roommate confirms, declines, or suggests a different amount | `/money/ious/:iouId` |
+| 22 | Settle up: both mark as paid | `/money/settle/:userId` |
 | | **Other** | |
-| 21 | Inbox (notifications) | `/inbox` |
-| 22 | Profile and room settings | `/settings` |
+| 23 | Inbox (notifications) | `/inbox` |
+| 24 | Profile and room settings | `/settings` |
+
+**How areas work:** chores are grouped into areas, like the kitchen or a bathroom. An area is shared by everyone in the room (including roommates who join later) or just the roommates you pick, and only they are offered when assigning its chores or setting up a rotation. In the code an area is a `ChoreList` with `memberIds` (empty means everyone).
+
+**How tracking works:** every time a chore is marked complete it's saved as a `ChoreCompletion`: who did it, whose turn it was, and whether it was on time. The house overview, each area's "Done" list and each chore's "Done so far" are built from these. History starts when this was added; older completions weren't recorded.
 
 **How rotation works:** a repeating chore has a rotation (who takes turns, in room order). Marking it complete moves the due date forward and hands it to the next person, who gets notified. One-off chores just stay done.
 
@@ -92,12 +98,12 @@ src/
     chores/           Lists, add, assign, detail, done
     money/            Balances, log IOU, IOU detail, settle up, inbox
   data/
-    types.ts          User, Room, ChoreList, Chore, Iou, Activity types
+    types.ts          User, Room, ChoreList (area), Chore, ChoreCompletion, Iou, Activity types
     seed.ts           Empty state and the demo room
     store.tsx         AppProvider + useApp() hook (the temporary data store)
   lib/
     balances.ts       Who-owes-whom math (amounts are in cents)
-    chores.ts         Repeat labels, next due date, rotation
+    chores.ts         Repeat labels, next due date, rotation, area members, lateness
     activity.ts       Feed and inbox sentences
     format.ts         Money, date and name formatting
 ```

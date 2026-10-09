@@ -113,7 +113,7 @@ export function AppLayout() {
               <Wordmark to="/room" />
               <p className="text-caption text-ink-muted">{room!.name}</p>
             </div>
-            <Link to="/settings" className="flex items-center gap-2 rounded-pill hover:opacity-80" aria-label="Profile and room settings">
+            <Link to="/settings" className="flex items-center gap-2 rounded-pill border border-rule px-4 py-2 hover:bg-paper transition" aria-label="Profile and room settings">
               <span className="text-label hidden sm:inline">{me!.name}</span>
               <Avatar user={me!} />
             </Link>
@@ -123,6 +123,8 @@ export function AppLayout() {
               <NavLink
                 key={link.to}
                 to={link.to}
+                // Stay highlighted on sub-pages too, like an area under Chores.
+                end={false}
                 className={({ isActive }) =>
                   `text-label whitespace-nowrap rounded-md px-4 py-2 ${isActive ? 'bg-accent text-on-color' : 'text-ink-muted hover:text-ink'}`
                 }

@@ -3,7 +3,7 @@ import { nextDueDate, nextInRotation } from '../lib/chores'
 import { iouValue } from '../lib/balances'
 import { firstName, todayIso } from '../lib/format'
 import { demoState, emptyState } from './seed'
-import type { Activity, AppState, Chore, Iou, Repeat, Room, User, UserId } from './types'
+import type { Activity, AppState, Chore, ChoreList, Iou, Repeat, Room, User, UserId } from './types'
 
 const STORAGE_KEY = 'common-room:app'
 
@@ -24,6 +24,8 @@ function load(): AppState {
       state.ious = state.ious.map((i) =>
         i.waitingOn ? i : { ...i, waitingOn: i.createdBy === i.debtor ? i.creditor : i.debtor },
       )
+      // Older saves don't have area members; those areas are shared by everyone.
+      state.choreLists = state.choreLists.map((l) => (l.memberIds ? l : { ...l, memberIds: [] }))
       return state
     }
   } catch {
@@ -53,11 +55,17 @@ type AppContextValue = {
 
   // Room
   createRoom: (name: string) => void
+  updateRoom: (patch: Partial<Pick<Room, 'name'>>) => void
   joinRoom: (code: string) => boolean
   simulateRoommateJoining: () => string | null
 
   // Chores
-  createChoreList: (name: string) => string
+  /** Starts an area. Leave `memberIds` empty to share it with everyone in the room. */
+  createChoreList: (name: string, memberIds: UserId[]) => string
+  /** Renames an area or changes who shares it. People taken off the area leave its rotations. */
+  updateChoreList: (listId: string, patch: Partial<Pick<ChoreList, 'name' | 'memberIds'>>) => void
+  /** Deletes an area and its chores. Completed work stays in the house history. */
+  deleteChoreList: (listId: string) => void
   addChore: (chore: { listId: string; title: string; notes: string; dueDate: string; repeat: Repeat }) => string
   assignChore: (choreId: string, assignedTo: UserId, rotation: UserId[]) => void
   completeChore: (choreId: string) => void
@@ -70,7 +78,8 @@ type AppContextValue = {
   /** Sends the IOU back to the other roommate with a different amount (or favor) to confirm. */
   suggestIouChange: (iouId: string, change: { amountCents: number; favor: string }) => void
   withdrawIou: (iouId: string) => void
-  markPaidWith: (otherId: UserId) => void
+  /** Marks your side as paid on the open IOUs with a roommate — all of them, or just the ones listed. */
+  markPaidWith: (otherId: UserId, iouIds?: string[]) => void
 
   // Inbox
   markInboxRead: () => void
@@ -168,6 +177,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         ],
       }))
     },
+    updateRoom: (patch) =>
+      setState((s) => ({
+        ...s,
+        rooms: s.rooms.map((r) => (r.id === roomId ? { ...r, ...patch } : r)),
+      })),
     joinRoom: (code) => {
       const target = state.rooms.find((r) => r.code.toUpperCase() === code.trim().toUpperCase())
       if (!target) return false
@@ -213,16 +227,35 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return firstName(name)
     },
 
-    createChoreList: (name) => {
+    createChoreList: (name, memberIds) => {
       const id = newId()
       setState((s) =>
         withActivity(
-          { ...s, choreLists: [...s.choreLists, { id, roomId, name }] },
+          { ...s, choreLists: [...s.choreLists, { id, roomId, name, memberIds }] },
           { kind: 'list-created', actor: meId, label: name, listId: id },
         ),
       )
       return id
     },
+    updateChoreList: (listId, patch) =>
+      setState((s) => {
+        const lists = s.choreLists.map((l) => (l.id === listId ? { ...l, ...patch } : l))
+        const updated = lists.find((l) => l.id === listId)
+        // Shared by everyone means nobody was taken off.
+        if (!updated || updated.memberIds.length === 0) return { ...s, choreLists: lists }
+        const stillIn = new Set(updated.memberIds)
+        return {
+          ...s,
+          choreLists: lists,
+          chores: s.chores.map((c) => (c.listId === listId ? { ...c, rotation: c.rotation.filter((id) => stillIn.has(id)) } : c)),
+        }
+      }),
+    deleteChoreList: (listId) =>
+      setState((s) => ({
+        ...s,
+        choreLists: s.choreLists.filter((l) => l.id !== listId),
+        chores: s.chores.filter((c) => c.listId !== listId),
+      })),
     addChore: (chore) => {
       const id = newId()
       setState((s) => ({ ...s, chores: [...s.chores, { ...chore, id, rotation: [], assignedTo: null, done: false }] }))
@@ -246,9 +279,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const chore = state.chores.find((c) => c.id === choreId)
       if (!chore) return
       const others = room?.memberIds.filter((id) => id !== meId) ?? []
+      // Every completion is kept, so the house can see what got done and by whom.
+      const logged = (s: AppState): AppState => ({
+        ...s,
+        completions: [
+          {
+            id: newId(),
+            roomId,
+            choreId,
+            listId: chore.listId,
+            title: chore.title,
+            doneBy: meId,
+            turnOf: chore.assignedTo,
+            dueDate: chore.dueDate,
+            at: new Date().toISOString(),
+          },
+          ...s.completions,
+        ],
+      })
       if (chore.repeat === 'none') {
         setState((s) =>
-          withActivity(updateChore(s, choreId, { done: true }), {
+          withActivity(updateChore(logged(s), choreId, { done: true }), {
             kind: 'chore-done', actor: meId, label: chore.title, choreId, notify: others,
           }),
         )
@@ -258,12 +309,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const next = nextInRotation(chore.rotation, chore.assignedTo)
       setState((s) =>
         withActivity(
-          updateChore(s, choreId, { assignedTo: next, dueDate: nextDueDate(chore.dueDate, chore.repeat) }),
+          updateChore(logged(s), choreId, { assignedTo: next, dueDate: nextDueDate(chore.dueDate, chore.repeat) }),
           { kind: 'chore-done', actor: meId, subject: next ?? undefined, label: chore.title, choreId, notify: others },
         ),
       )
     },
-    reopenChore: (choreId) => setState((s) => updateChore(s, choreId, { done: false })),
+    reopenChore: (choreId) =>
+      setState((s) => {
+        // It wasn't really done, so take back the latest completion (newest come first).
+        const latest = s.completions.find((c) => c.choreId === choreId)
+        return updateChore({ ...s, completions: s.completions.filter((c) => c !== latest) }, choreId, { done: false })
+      }),
     deleteChore: (choreId) => setState((s) => ({ ...s, chores: s.chores.filter((c) => c.id !== choreId) })),
 
     logIou: (iou) => {
@@ -321,10 +377,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       )
     },
     withdrawIou: (iouId) => setState((s) => ({ ...s, ious: s.ious.filter((i) => i.id !== iouId) })),
-    markPaidWith: (otherId) => {
+    markPaidWith: (otherId, iouIds) => {
       const between = state.ious.filter(
         (i) =>
           i.status === 'open' &&
+          (!iouIds || iouIds.includes(i.id)) &&
           ((i.debtor === meId && i.creditor === otherId) || (i.debtor === otherId && i.creditor === meId)),
       )
       if (between.length === 0) return

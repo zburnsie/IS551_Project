@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 
 export function BackLink({ to, children }: { to: string; children: ReactNode }) {
   return (
-    <Link to={to} className="text-label self-start text-ink-muted hover:text-ink">
+    <Link to={to} className="text-label self-start inline-flex items-center gap-2 rounded-md border border-rule bg-surface px-4 py-2 text-ink-muted hover:bg-paper hover:text-ink transition">
       ← {children}
     </Link>
   )

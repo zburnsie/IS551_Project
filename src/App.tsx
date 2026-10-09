@@ -8,7 +8,9 @@ import {
   ChoreDonePage,
   ChoreListPage,
   ChoresIndexPage,
+  ChoresOverviewPage,
   CreateChoreListPage,
+  EditChoreListPage,
 } from './pages/chores/ChorePages'
 import { InboxPage, IouDetailPage, LogIouPage, MoneyPage, SettleUpPage } from './pages/money/MoneyPages'
 import {
@@ -53,8 +55,10 @@ export default function App() {
           <Route path="room" element={<RoomHomePage />} />
           <Route path="room/invite" element={<InviteRoommatesPage inApp />} />
           <Route path="chores" element={<ChoresIndexPage />} />
+          <Route path="chores/overview" element={<ChoresOverviewPage />} />
           <Route path="chores/lists/new" element={<CreateChoreListPage />} />
           <Route path="chores/lists/:listId" element={<ChoreListPage />} />
+          <Route path="chores/lists/:listId/edit" element={<EditChoreListPage />} />
           <Route path="chores/lists/:listId/add" element={<AddChorePage />} />
           <Route path="chores/:choreId" element={<ChoreDetailPage />} />
           <Route path="chores/:choreId/assign" element={<AssignChorePage />} />

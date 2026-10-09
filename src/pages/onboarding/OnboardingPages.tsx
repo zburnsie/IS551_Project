@@ -1,7 +1,7 @@
 import { useState, type FormEvent, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Avatar } from '../../components/Avatar'
-import { Button, ButtonLink } from '../../components/Button'
+import { Button } from '../../components/Button'
 import { Card } from '../../components/Card'
 import { ErrorText, Field, TextInput } from '../../components/fields'
 import { BackLink, Flash } from '../../components/PageHeader'
@@ -209,7 +209,7 @@ export function InviteRoommatesPage({ inApp = false }: { inApp?: boolean }) {
           <span className="text-body text-ink-muted">You can invite people later from settings.</span>
         </div>
       )}
-      {inApp && <ButtonLink to="/room" variant="secondary" className="self-start">Done</ButtonLink>}
+
     </>
   )
 }
