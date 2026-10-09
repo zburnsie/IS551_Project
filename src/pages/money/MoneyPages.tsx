@@ -10,9 +10,10 @@ import { IouStatusTag } from '../../components/status'
 import { Tag } from '../../components/Tag'
 import { Toast, type ToastState } from '../../components/Toast'
 import { useApp } from '../../data/store'
-import type { Iou } from '../../data/types'
-import { iouValue, moneyBalance, openIousBetween, paidMarkNeeded } from '../../lib/balances'
-import { formatDate, formatMoney } from '../../lib/format'
+import type { Activity, Iou } from '../../data/types'
+import { describeActivity } from '../../lib/activity'
+import { iouValue, moneyBalance, openIousBetween } from '../../lib/balances'
+import { formatDate, formatMoney, formatTimestamp } from '../../lib/format'
 
 function useRoomIous() {
   const { state, room } = useApp()
@@ -524,10 +525,63 @@ export function SettleUpPage() {
   )
 }
 
+function inboxDetailLabel(a: Activity): { label: string; link: string | null } {
+  if (a.iouId) return { label: 'View in Money', link: `/money/ious/${a.iouId}` }
+  if (a.choreId) return { label: 'View in Chores', link: `/chores/${a.choreId}` }
+  if (a.listId) return { label: 'View in Chores', link: `/chores/lists/${a.listId}` }
+  if (a.kind === 'iou-marked-paid' || a.kind === 'iou-settled') return { label: 'View in Money', link: `/money/settle/${a.actor}` }
+  return { label: '', link: null }
+}
+
+function InboxItemDetail({ activity }: { activity: Activity }) {
+  const { state, me, nameOf } = useApp()
+  const { label, link } = inboxDetailLabel(activity)
+
+  let detail: string | null = null
+  if (activity.choreId) {
+    const chore = state.chores.find((c) => c.id === activity.choreId)
+    if (chore) {
+      const assignee = chore.assignedTo ? nameOf(chore.assignedTo) : 'Unassigned'
+      detail = `Due ${formatDate(chore.dueDate)} \u00b7 ${assignee}${chore.done ? ' \u00b7 Done' : ''}`
+    }
+  }
+
+  // Build richer detail for IOUs
+  let detailNode: React.ReactNode = null
+  if (activity.iouId) {
+    const iou = state.ious.find((i) => i.id === activity.iouId)
+    if (iou) {
+      const amount = iou.kind === 'money' ? formatMoney(iou.amountCents) : iou.favor
+      const owedToMe = iou.creditor === me?.id
+      detailNode = (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className={`text-body font-mono ${owedToMe ? 'text-accent' : 'text-brand'}`}>{amount}</span>
+          <IouStatusTag iou={iou} />
+          <span className="text-caption text-ink-muted">{nameOf(iou.debtor)} {iou.debtor === me?.id ? 'owe' : 'owes'} {nameOf(iou.creditor, true)}</span>
+        </div>
+      )
+    }
+  } else if (detail) {
+    detailNode = <p className="text-caption text-ink-muted">{detail}</p>
+  }
+
+  return (
+    <div className="flex flex-col gap-2 px-4 pb-4 pt-0 ml-12">
+      {detailNode}
+      {link && (
+        <ButtonLink to={link} variant="secondary" className="self-start">
+          {label} →
+        </ButtonLink>
+      )}
+    </div>
+  )
+}
+
 export function InboxPage() {
-  const { state, me, room, markInboxRead } = useApp()
+  const { state, me, room, userOf, nameOf, markInboxRead } = useApp()
   const items = state.activity.filter((a) => a.roomId === room!.id && a.notify.includes(me!.id))
   const hasUnread = items.some((a) => !a.readBy.includes(me!.id))
+  const [expandedId, setExpandedId] = useState<string | null>(null)
 
   return (
     <>
@@ -539,10 +593,33 @@ export function InboxPage() {
       </PageHeader>
       {items.length === 0 ? (
         <EmptyState title="Nothing new">
-          <p className="text-body text-ink-muted">You’ll see a note here when a roommate assigns you a chore or logs an IOU with you.</p>
+          <p className="text-body text-ink-muted">You'll see a note here when a roommate assigns you a chore or logs an IOU with you.</p>
         </EmptyState>
       ) : (
-        <ActivityList items={items} showUnread />
+        <ul className="flex flex-col gap-2">
+          {items.map((a) => {
+            const actor = userOf(a.actor)
+            const isExpanded = expandedId === a.id
+            return (
+              <li key={a.id} className="rounded-md border border-rule bg-surface hover:border-accent transition">
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-4 p-4 text-left"
+                  onClick={() => setExpandedId(isExpanded ? null : a.id)}
+                >
+                  {actor && <Avatar user={actor} size="sm" />}
+                  <div className="flex min-w-0 flex-1 flex-col gap-1">
+                    <span className="text-body">{describeActivity(a, nameOf)}</span>
+                    <span className="text-caption text-ink-muted">{formatTimestamp(a.at)}</span>
+                  </div>
+                  {!a.readBy.includes(me!.id) && <Tag tone="brand">New</Tag>}
+                  <span className={`text-ink-muted transition-transform ${isExpanded ? 'rotate-180' : ''}`} aria-hidden="true">▾</span>
+                </button>
+                {isExpanded && <InboxItemDetail activity={a} />}
+              </li>
+            )
+          })}
+        </ul>
       )}
     </>
   )
