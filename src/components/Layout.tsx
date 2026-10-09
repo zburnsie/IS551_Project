@@ -3,8 +3,10 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useApp } from '../data/store'
 import { Avatar } from './Avatar'
 import { buttonClass } from './Button'
+import { SkipToDemo } from './SkipToDemo'
 import { useHomePath } from './guards'
 import { PrototypeBar } from './PrototypeBar'
+import { SetupSteps } from './SetupSteps'
 
 /** No logo yet — the name is set in `title` type until one exists. */
 function Wordmark({ to }: { to: string }) {
@@ -59,16 +61,9 @@ export function PublicLayout() {
   )
 }
 
-const steps = [
-  { path: '/welcome/profile', label: 'Profile' },
-  { path: '/welcome/room', label: 'Room' },
-  { path: '/welcome/invite', label: 'Invite' },
-]
-
 export function OnboardingLayout() {
   const { pathname } = useLocation()
   const { logOut } = useApp()
-  const current = Math.max(0, steps.findIndex((s) => pathname.startsWith(s.path) || (s.path === '/welcome/room' && pathname === '/welcome/join')))
   return (
     <Shell
       header={
@@ -79,17 +74,10 @@ export function OnboardingLayout() {
       }
     >
       <main className="mx-auto flex max-w-xl flex-col gap-8 px-4 py-8">
-        <ol className="flex gap-2" aria-label="Setup steps">
-          {steps.map((s, i) => (
-            <li key={s.path} className="flex flex-1 flex-col gap-1" aria-current={i === current ? 'step' : undefined}>
-              <span className={`h-1 rounded-pill ${i <= current ? 'bg-brand' : 'bg-rule'}`} />
-              <span className={`text-caption ${i === current ? 'text-ink' : 'text-ink-muted'}`}>
-                {i + 1}. {s.label}
-              </span>
-            </li>
-          ))}
-        </ol>
+        <SetupSteps />
         <Outlet />
+        {/* The invite step has its own skip, into the room you just made. */}
+        {pathname !== '/welcome/invite' && <SkipToDemo />}
       </main>
     </Shell>
   )

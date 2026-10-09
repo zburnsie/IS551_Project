@@ -3,6 +3,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Button } from '../../components/Button'
 import { Card } from '../../components/Card'
 import { ErrorText, Field, TextInput } from '../../components/fields'
+import { SetupSteps } from '../../components/SetupSteps'
+import { SkipToDemo } from '../../components/SkipToDemo'
 import { useApp } from '../../data/store'
 
 /** Simulated single sign-on: asks for a school email instead of redirecting to a real provider. */
@@ -65,6 +67,7 @@ export function SignUpPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-8">
+      <SetupSteps />
       <header className="flex flex-col gap-2">
         <h1 className="text-title">Make your account</h1>
         <p className="text-body text-ink-muted">It takes about a minute. Then you’ll set up your room.</p>
@@ -92,6 +95,7 @@ export function SignUpPage() {
       <p className="text-body text-center">
         Already have an account? <Link to="/login" className="text-label underline">Log in</Link>
       </p>
+      <SkipToDemo />
     </div>
   )
 }
