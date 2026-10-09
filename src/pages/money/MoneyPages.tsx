@@ -12,7 +12,7 @@ import { Toast, type ToastState } from '../../components/Toast'
 import { useApp } from '../../data/store'
 import type { Activity, Iou } from '../../data/types'
 import { describeActivity } from '../../lib/activity'
-import { iouValue, moneyBalance, openIousBetween } from '../../lib/balances'
+import { iouValue, moneyBalance, openIousBetween, paidMarkNeeded } from '../../lib/balances'
 import { formatDate, formatMoney, formatTimestamp } from '../../lib/format'
 
 function useRoomIous() {
