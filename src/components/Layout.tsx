@@ -123,7 +123,8 @@ export function AppLayout() {
               <NavLink
                 key={link.to}
                 to={link.to}
-                end
+                // Stay highlighted on sub-pages too, like an area under Chores.
+                end={false}
                 className={({ isActive }) =>
                   `text-label whitespace-nowrap rounded-md px-4 py-2 ${isActive ? 'bg-accent text-on-color' : 'text-ink-muted hover:text-ink'}`
                 }

@@ -1,5 +1,5 @@
-import type { Chore, Repeat, UserId } from '../data/types'
-import { addDays, addMonths } from './format'
+import type { Chore, ChoreCompletion, ChoreList, Repeat, UserId } from '../data/types'
+import { addDays, addMonths, dateOf, daysBetween } from './format'
 
 export const repeatLabels: Record<Repeat, string> = {
   none: 'Does not repeat',
@@ -41,4 +41,15 @@ export function upcomingTurns(chore: Chore, count: number): { who: UserId; due: 
     turns.push({ who: nextInRotation(chore.rotation, prev.who) ?? prev.who, due: nextDueDate(prev.due, chore.repeat) })
   }
   return turns
+}
+
+/** Roommates who share an area, in room order. An area with no members listed is shared by everyone. */
+export function areaMembers<T extends { id: UserId }>(list: ChoreList, roommates: T[]): T[] {
+  if (list.memberIds.length === 0) return roommates
+  return roommates.filter((r) => list.memberIds.includes(r.id))
+}
+
+/** Days late a completion was (0 if on time or early). */
+export function daysLate(completion: ChoreCompletion): number {
+  return Math.max(0, daysBetween(completion.dueDate, dateOf(completion.at)))
 }

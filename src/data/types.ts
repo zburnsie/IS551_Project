@@ -22,10 +22,13 @@ export type Room = {
 
 export type Repeat = 'none' | 'daily' | 'weekly' | 'biweekly' | 'monthly'
 
+/** A part of the place with its own chores, like the kitchen or a bathroom two of you share. */
 export type ChoreList = {
   id: string
   roomId: string
   name: string
+  /** Roommates who share this area. Empty means everyone in the room, including anyone who joins later. */
+  memberIds: UserId[]
 }
 
 export type Chore = {
@@ -40,6 +43,22 @@ export type Chore = {
   assignedTo: UserId | null
   /** Only one-off chores stay done; repeating chores roll forward instead. */
   done: boolean
+}
+
+/** One time a chore was marked complete. Kept even if the chore is later deleted. */
+export type ChoreCompletion = {
+  id: string
+  roomId: string
+  choreId: string
+  listId: string
+  /** Chore title, captured at the time. */
+  title: string
+  doneBy: UserId
+  /** Whose turn it was. Differs from `doneBy` when someone covered for a roommate. */
+  turnOf: UserId | null
+  /** The due date of the turn that was completed. */
+  dueDate: string
+  at: string // ISO timestamp
 }
 
 /**
@@ -103,6 +122,7 @@ export type AppState = {
   rooms: Room[]
   choreLists: ChoreList[]
   chores: Chore[]
+  completions: ChoreCompletion[]
   ious: Iou[]
   activity: Activity[]
   /** Who is signed in. The prototype bar can switch this to act as another roommate. */
