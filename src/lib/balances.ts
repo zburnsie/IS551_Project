@@ -10,6 +10,11 @@ export function openIousBetween(ious: Iou[], a: UserId, b: UserId): Iou[] {
   )
 }
 
+/** True when the other roommate has marked something paid and it's waiting on you to do the same. */
+export function paidMarkNeeded(ious: Iou[], meId: UserId, otherId: UserId): boolean {
+  return openIousBetween(ious, meId, otherId).some((i) => i.paidMarks.includes(otherId) && !i.paidMarks.includes(meId))
+}
+
 /**
  * Net money between you and another roommate, in cents: positive means they
  * owe you, negative means you owe them. Only confirmed money IOUs count.
