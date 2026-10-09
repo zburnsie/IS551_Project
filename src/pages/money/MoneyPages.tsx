@@ -389,11 +389,11 @@ export function IouDetailPage() {
                   {iou.previous ? `Does ${iouValue(iou)} work for you?` : `${nameOf(iou.createdBy)} logged this. Does it look right to you?`}
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  <Button onClick={() => respondToIou(iou.id, true)}>Yes, confirm</Button>
+                  <Button variant="accent" onClick={() => respondToIou(iou.id, true)}>Yes, confirm</Button>
                   <Button variant="secondary" onClick={() => setSuggesting(true)}>
                     {iou.kind === 'money' ? 'Suggest a different amount' : 'Suggest something else'}
                   </Button>
-                  <Button variant="secondary" onClick={() => respondToIou(iou.id, false)}>Decline</Button>
+                  <Button variant="primary" onClick={() => respondToIou(iou.id, false)}>Decline</Button>
                 </div>
               </>
             )}
