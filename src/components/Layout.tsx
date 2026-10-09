@@ -107,7 +107,7 @@ export function AppLayout() {
   return (
     <Shell
       header={
-        <div className="mx-auto flex max-w-3xl flex-col gap-4 px-4 py-4 md:px-8">
+        <div className="mx-auto flex max-w-3xl flex-col gap-4 px-4 pt-4 md:px-8">
           <div className="flex items-center justify-between gap-4">
             <div className="flex flex-col">
               <Wordmark to="/room" />
@@ -123,10 +123,10 @@ export function AppLayout() {
               <NavLink
                 key={link.to}
                 to={link.to}
-                // Stay highlighted on sub-pages too, like an area under Chores.
+                // Stay underlined on sub-pages too, like an area under Chores.
                 end={false}
                 className={({ isActive }) =>
-                  `text-label whitespace-nowrap rounded-md px-4 py-2 ${isActive ? 'bg-accent text-on-color' : 'text-ink-muted hover:text-ink'}`
+                  `text-label whitespace-nowrap border-b-2 px-4 py-2 ${isActive ? 'border-ink text-ink' : 'border-transparent text-ink-muted hover:text-ink'}`
                 }
               >
                 {link.label}
