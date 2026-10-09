@@ -83,6 +83,8 @@ type AppContextValue = {
 
   // Inbox
   markInboxRead: () => void
+  /** Marks one inbox item as read, e.g. when you open it. */
+  markActivityRead: (activityId: string) => void
 
   // Prototype controls
   actAs: (userId: UserId) => void
@@ -414,6 +416,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
         ...s,
         activity: s.activity.map((a) =>
           a.notify.includes(meId) && !a.readBy.includes(meId) ? { ...a, readBy: [...a.readBy, meId] } : a,
+        ),
+      })),
+
+    markActivityRead: (activityId) =>
+      setState((s) => ({
+        ...s,
+        activity: s.activity.map((a) =>
+          a.id === activityId && !a.readBy.includes(meId) ? { ...a, readBy: [...a.readBy, meId] } : a,
         ),
       })),
 
