@@ -1,12 +1,12 @@
 # Deploying Common Room
 
-We are not deploying yet. This is the plan for when we want a public link people can try.
+How to put Common Room on a public link people can try.
 
-The app is a static site (no backend), so any static host works. We'd use [Vercel](https://vercel.com): it's free, detects Vite on its own, and gives every branch its own preview link.
+The app is a static site (no backend), so any static host works. We use [Vercel](https://vercel.com): it's free, detects Vite on its own, and gives every branch its own preview link.
 
 ## Before you start
 
-**Add `vercel.json` to the repo root.** Every screen has its own URL (`/room`, `/join/KTX-482`…). Without this file, refreshing a page or opening an invite link gives a 404 on Vercel.
+**`vercel.json` in the repo root is required.** Every screen has its own URL (`/room`, `/join/KTX-482`…). Without this file, refreshing a page or opening an invite link gives a 404 on Vercel. Don't delete it.
 
 ```json
 {
@@ -14,7 +14,7 @@ The app is a static site (no backend), so any static host works. We'd use [Verce
 }
 ```
 
-Commit and push it. It only takes effect on Vercel, so refresh a page like `/room` after the first deploy to check it works.
+It only takes effect on Vercel, so refresh a page like `/room` after the first deploy to check it works.
 
 ## Option A: connect the GitHub repo (best for the group)
 
