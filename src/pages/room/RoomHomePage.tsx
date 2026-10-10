@@ -40,9 +40,9 @@ export function RoomHomePage() {
 
   const balanceLabel =
     netCents > 0 ? (
-      <>You’re owed <span className="text-amount text-ink">{formatMoney(netCents)}</span></>
+      <>You’re owed <span className="text-amount text-positive">{formatMoney(netCents)}</span></>
     ) : netCents < 0 ? (
-      <>You owe <span className="text-amount text-ink">{formatMoney(-netCents)}</span></>
+      <>You owe <span className="text-amount text-danger">{formatMoney(-netCents)}</span></>
     ) : (
       'You’re even'
     )

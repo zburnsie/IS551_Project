@@ -13,7 +13,7 @@ Common Room helps roommates split shared costs and chores without the awkwardnes
 Palette: Shell (`paper`), Stone (`rule`), Sky (`sky`), Honeydew (`highlight`), Viridian (`ink` / `accent`), plus status fills.
 
 - Build every screen on `paper`; raise cards and rows on `surface` with a 1px `rule` border — no drop shadows.
-- Set text in `ink`; secondary text in `ink-muted`. Money amounts always use `ink` — say who owes whom in words, never by color alone.
+- Set text in `ink`; secondary text in `ink-muted`. Money amounts are `positive` (green) when owed to you and `danger` (red) when you owe, and `ink` when neither applies — always say who owes whom in words too, never by color alone.
 - `accent` (viridian) is for primary action buttons — Done, confirm, settle, New Area, Log an IOU. Text on it is `on-color`.
 - Status tags use **light tinted fills with dark text** so they never look like buttons:
   - `sky` + `ink` — informational (New, Waiting to confirm, Marked paid by one)

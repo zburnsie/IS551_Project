@@ -47,10 +47,15 @@ function useMarkPaid() {
   }
 }
 
+/** Green when it's owed to you, red when you owe it. The words next to it always say which. */
+function owedColor(owedToMe: boolean) {
+  return owedToMe ? 'text-positive' : 'text-danger'
+}
+
 /** A non-money IOU ("a dinner"), marked with a gift symbol so it never reads as a dollar amount. */
-function FavorMark({ favor, label }: { favor: string; owedToMe?: boolean; label?: string }) {
+function FavorMark({ favor, owedToMe, label }: { favor: string; owedToMe?: boolean; label?: string }) {
   return (
-    <span className="text-label inline-flex items-center gap-1 text-ink">
+    <span className={`text-label inline-flex items-center gap-1 ${owedToMe === undefined ? 'text-ink' : owedColor(owedToMe)}`}>
       <svg aria-hidden="true" viewBox="0 0 16 16" className="size-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round">
         <rect x="2" y="6" width="12" height="3" />
         <path d="M3 9v5h10V9M8 6v8M8 6C6.5 6 4.5 5.5 4.5 3.75S7 2 8 6Zm0 0c1.500 0 3.500-.5 3.500-2.250S9 2 8 6Z" />
@@ -67,6 +72,9 @@ function IouRow({ iou }: { iou: Iou }) {
   const markPaid = useMarkPaid()
   const sentence = useIouSentence()
   const owedToMe = iou.creditor === me!.id
+  const involved = owedToMe || iou.debtor === me!.id
+  // Only IOUs that still count get a color; settled and declined ones stay neutral.
+  const live = involved && (iou.status === 'open' || iou.status === 'pending')
   const otherId = owedToMe ? iou.debtor : iou.creditor
   const needsMyConfirm = iou.status === 'pending' && iou.waitingOn === me!.id
   const canMark = iou.status === 'open' && !iou.paidMarks.includes(me!.id)
@@ -83,9 +91,9 @@ function IouRow({ iou }: { iou: Iou }) {
           <span className="order-last col-span-2 sm:order-none"><IouStatusTag iou={iou} /></span>
         )}
         {iou.kind === 'money' ? (
-          <span className="text-amount text-right text-ink">{formatMoney(iou.amountCents)}</span>
+          <span className={`text-amount text-right ${live ? owedColor(owedToMe) : 'text-ink'}`}>{formatMoney(iou.amountCents)}</span>
         ) : (
-          <FavorMark favor={iou.favor} owedToMe={owedToMe} />
+          <FavorMark favor={iou.favor} owedToMe={live ? owedToMe : undefined} />
         )}
       </Link>
       {needsMyConfirm && (
@@ -155,7 +163,7 @@ export function MoneyPage() {
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       {cents !== 0 && (
-                        <span className="text-amount text-ink">
+                        <span className={`text-amount ${owedColor(cents > 0)}`}>
                           {formatMoney(Math.abs(cents))}
                         </span>
                       )}
@@ -380,7 +388,7 @@ export function IouDetailPage() {
         <dl className="grid gap-4 sm:grid-cols-3">
           <div className="flex flex-col gap-1">
             <dt className="text-caption text-ink-muted">Amount</dt>
-            <dd className={iou.kind === 'money' ? 'text-amount text-ink' : 'text-body'}>{iouValue(iou)}</dd>
+            <dd className={`${iou.kind === 'money' ? 'text-amount' : 'text-body'} ${involved && (iou.status === 'open' || iou.status === 'pending') ? owedColor(iou.creditor === me!.id) : 'text-ink'}`}>{iouValue(iou)}</dd>
           </div>
           <div className="flex flex-col gap-1">
             <dt className="text-caption text-ink-muted">For</dt>
@@ -520,7 +528,7 @@ export function SettleUpPage() {
                   </span>
                 </div>
                 {i.kind === 'money' ? (
-                  <span className="text-amount text-ink">{iouValue(i)}</span>
+                  <span className={`text-amount ${owedColor(i.creditor === me!.id)}`}>{iouValue(i)}</span>
                 ) : (
                   <FavorMark favor={i.favor} owedToMe={i.creditor === me!.id} />
                 )}

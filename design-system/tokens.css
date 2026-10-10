@@ -14,6 +14,7 @@
   --success: #DCE8D6; /* Soft green fill for on-time / success tags. Text on it is `success-ink`. */
   --success-ink: #2A4A32; /* Dark green text on `success`. */
   --success-mid: #BCCCB8; /* One shade darker than `success` — on-time chart bars. */
+  --positive: #2E7D4F; /* Green text for money owed to you (≥4.5:1 on `paper` and `surface`). Money you owe uses `danger`. */
   --olive: #EBE4C8; /* Soft olive fill for completed-late tags. Text on it is `olive-ink`. */
   --olive-ink: #4A4520; /* Dark olive text on `olive`. */
   --olive-mid: #CEC7AA; /* One shade darker than `olive` — late chart bars. */

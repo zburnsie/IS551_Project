@@ -15,6 +15,7 @@ module.exports = {
         "success": "var(--success)",
         "success-ink": "var(--success-ink)",
         "success-mid": "var(--success-mid)",
+        "positive": "var(--positive)",
         "olive": "var(--olive)",
         "olive-ink": "var(--olive-ink)",
         "olive-mid": "var(--olive-mid)",

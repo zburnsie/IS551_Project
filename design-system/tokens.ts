@@ -12,6 +12,7 @@ export const tokens = {
     "success": "#DCE8D6",
     "success-ink": "#2A4A32",
     "success-mid": "#BCCCB8",
+    "positive": "#2E7D4F",
     "olive": "#EBE4C8",
     "olive-ink": "#4A4520",
     "olive-mid": "#CEC7AA",
