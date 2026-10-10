@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo, useRef, type CSSProperties } from 'react'
 
-const COLORS = ['#B5532F', '#4F6B3A', '#E6B84A', '#FFFBF5', '#2A211B']
+const COLORS = ['#344945', '#D5E3E8', '#E4E3BC', '#E0DCD1', '#F7F5F1']
 
 type Piece = {
   left: string
@@ -24,7 +24,7 @@ function makePieces(count: number): Piece[] {
 
 /** Brief celebratory toast with confetti — auto-dismisses after a moment. */
 export function ConfettiToast({ message, onDismiss }: { message: string; onDismiss: () => void }) {
-  const pieces = useMemo(() => makePieces(48), [message])
+  const pieces = useMemo(() => makePieces(48), [])
   const titleId = useId()
   const onDismissRef = useRef(onDismiss)
   onDismissRef.current = onDismiss

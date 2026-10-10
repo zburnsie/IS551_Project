@@ -114,7 +114,7 @@ Pages only read and write data through `useApp()`. When we add a backend, we sho
 
 Read [`design-system/README.md`](design-system/README.md) before building UI. The short version:
 
-- **Colors:** `bg-paper` for pages; `bg-surface border border-rule` for cards (no shadows). `brand` (terracotta) is for primary actions and money you owe; `accent` (olive) is for chores, settled states and money owed to you. Always pair a color with words.
+- **Colors:** `bg-paper` (shell) for pages; `bg-surface border border-rule` (stone) for cards (no shadows). Primary buttons use `accent`/`ink` (viridian). Status tags use soft fills (`success`, `olive`, `danger-soft`, `sky`) with dark text. Solid `danger` is for still-open overdue only. Money amounts stay in `ink` — say who owes whom in words.
 - **Type:** `text-display` / `text-title` / `text-heading` for headlines, `text-body` / `text-label` for text, `text-amount` / `text-caption` for money, dates and ratios.
 - **Spacing:** use only `1`, `2`, `4`, `8` (for example `p-4`, `gap-2`, `gap-8`).
 - **Shape:** `rounded-md` for cards and buttons, `rounded-sm` for inputs, `rounded-pill` for chips and tags.

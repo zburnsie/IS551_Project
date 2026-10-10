@@ -13,7 +13,7 @@ export function ChoreRow({ chore, showList = false }: { chore: Chore; showList?:
   return (
     <Link
       to={chore.assignedTo ? `/chores/${chore.id}` : `/chores/${chore.id}/assign`}
-      className="flex flex-wrap items-center gap-4 rounded-md border border-rule bg-surface p-4 hover:border-accent"
+      className="flex flex-wrap items-center gap-4 rounded-md border border-rule bg-surface p-4 hover:border-ink"
     >
       {assignee ? <Avatar user={assignee} /> : <span className="size-8 rounded-pill border border-dashed border-ink-muted" aria-hidden />}
       <div className="flex min-w-0 flex-1 flex-col gap-1">

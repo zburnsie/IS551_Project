@@ -10,10 +10,19 @@ Common Room helps roommates split shared costs and chores without the awkwardnes
 
 ## Color
 
+Palette: Shell (`paper`), Stone (`rule`), Sky (`sky`), Honeydew (`highlight`), Viridian (`ink` / `accent`), plus status fills.
+
 - Build every screen on `paper`; raise cards and rows on `surface` with a 1px `rule` border — no drop shadows.
-- Set text in `ink`; secondary text in `ink-muted`.
-- `brand` (terracotta) is for primary actions and money you owe; `accent` (olive) is for chores, settled states and money owed to you. Always pair them with a word — never let color alone say who owes whom. Text on either is `on-color`.
-- `highlight` (mustard) marks due-soon and today; text on it is `ink`.
+- Set text in `ink`; secondary text in `ink-muted`. Money amounts always use `ink` — say who owes whom in words, never by color alone.
+- `accent` (viridian) is for primary action buttons — Done, confirm, settle, New Area, Log an IOU. Text on it is `on-color`.
+- Status tags use **light tinted fills with dark text** so they never look like buttons:
+  - `sky` + `ink` — informational (New, Waiting to confirm, Marked paid by one)
+  - `success` + `success-ink` — on time / done / settled
+  - `olive` + `olive-ink` — completed late (not still overdue)
+  - `danger-soft` + `danger-ink` — still-open overdue chores only
+  - `highlight` + `ink` (with ink border) — Needs someone (asks for action; not red)
+- Solid `danger` is for overdue counts and destructive buttons (e.g. Decline). Text on it is `on-color`.
+- Chart bars: `success-mid` / `olive-mid` — one shade darker than the on-time / late pill fills.
 - Focus: a 2px solid `focus` ring, 2px offset.
 
 ## Type
@@ -35,6 +44,6 @@ No icon set or logo yet — set the name in `title` type until one exists. When 
 
 - `tokens.css` — CSS variables (`var(--brand)`, `var(--space-4)`…), Google Fonts import, and `.text-display` … `.text-caption` type classes. Import it once at your app root.
 - `tokens.ts` — the same values as a typed object for JS/TS (styled-components, inline styles, charts).
-- `tailwind.preset.js` — Tailwind preset: `bg-paper`, `text-ink`, `bg-brand`, `font-display`, `text-amount`, `p-4`, `rounded-md`… (needs `tokens.css` loaded for the color variables).
+- `tailwind.preset.js` — Tailwind preset: `bg-paper`, `text-ink`, `bg-success`, `font-display`, `text-amount`, `p-4`, `rounded-md`… (needs `tokens.css` loaded for the color variables).
 - `tokens.json` — the source of truth, in the design system's own format.
 - `cover.html` — the brand cover, for reference.
