@@ -11,6 +11,7 @@ module.exports = {
         "ink-muted": "var(--ink-muted)",
         "brand": "var(--brand)",
         "accent": "var(--accent)",
+        "accent-edge": "var(--accent-edge)",
         "highlight": "var(--highlight)",
         "success": "var(--success)",
         "success-ink": "var(--success-ink)",

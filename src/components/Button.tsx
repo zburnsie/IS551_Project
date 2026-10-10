@@ -1,11 +1,12 @@
 import type { ButtonHTMLAttributes } from 'react'
 import { Link, type LinkProps } from 'react-router-dom'
 
-type Variant = 'primary' | 'secondary' | 'accent' | 'highlight' | 'danger'
+type Variant = 'primary' | 'secondary' | 'accent' | 'confirm' | 'highlight' | 'danger'
 
 const variants: Record<Variant, string> = {
-  primary: 'bg-ink text-on-color border-ink hover:brightness-95',
-  accent: 'bg-accent text-on-color border-accent hover:brightness-95',
+  primary: 'bg-accent text-ink border-accent-edge hover:brightness-95',
+  accent: 'bg-accent text-ink border-accent-edge hover:brightness-95',
+  confirm: 'bg-positive text-on-color border-positive hover:brightness-95',
   highlight: 'bg-highlight text-ink border-highlight hover:brightness-95',
   danger: 'bg-danger text-on-color border-danger hover:brightness-95',
   secondary: 'bg-surface text-ink border-rule hover:bg-paper',

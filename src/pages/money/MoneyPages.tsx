@@ -98,12 +98,12 @@ function IouRow({ iou }: { iou: Iou }) {
       </Link>
       {needsMyConfirm && (
         <div className="flex flex-col px-4 pb-4 sm:py-4 sm:pl-0">
-          <ButtonLink to={`/money/ious/${iou.id}`} variant="primary">Confirm</ButtonLink>
+          <ButtonLink to={`/money/ious/${iou.id}`} variant="confirm">Confirm</ButtonLink>
         </div>
       )}
       {canMark && (
         <div className="flex flex-col px-4 pb-4 sm:py-4 sm:pl-0">
-          <Button variant={theyMarked ? 'primary' : 'accent'} onClick={() => markPaid(otherId, [iou])}>
+          <Button variant="confirm" onClick={() => markPaid(otherId, [iou])}>
             {theyMarked ? 'Confirm paid' : 'Mark paid'}
           </Button>
         </div>
@@ -418,7 +418,7 @@ export function IouDetailPage() {
                   {iou.previous ? `Does ${iouValue(iou)} work for you?` : `${nameOf(iou.createdBy)} logged this. Does it look right to you?`}
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  <Button onClick={() => respondToIou(iou.id, true)}>Yes, confirm</Button>
+                  <Button variant="confirm" onClick={() => respondToIou(iou.id, true)}>Yes, confirm</Button>
                   <Button variant="secondary" onClick={() => setSuggesting(true)}>
                     {iou.kind === 'money' ? 'Suggest a different amount' : 'Suggest something else'}
                   </Button>
@@ -535,7 +535,7 @@ export function SettleUpPage() {
                 {iMarked ? (
                   <span className="col-span-2"><Tag tone="success">You marked paid</Tag></span>
                 ) : (
-                  <Button variant={theyMarked ? 'primary' : 'accent'} className="col-span-2" onClick={() => markPaid([i])}>
+                  <Button variant="confirm" className="col-span-2" onClick={() => markPaid([i])}>
                     {theyMarked ? 'Confirm paid' : 'Mark paid'}
                   </Button>
                 )}

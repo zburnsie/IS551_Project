@@ -7,9 +7,10 @@
   --rule: #E0DCD1; /* Stone. Hairline dividers and card borders — no drop shadows. */
   --sky: #D5E3E8; /* Soft fills, selected chrome, and informational tags. Text on it is `ink`. */
   --highlight: #E4E3BC; /* Honeydew. Soft fill / action-needed tags. Text on it is `ink`. */
-  --ink: #344945; /* Viridian. Headlines, body copy and amounts on light surfaces. */
+  --ink: #22313C; /* Slate. Headlines, body copy and amounts on light surfaces. */
   --ink-muted: #5C6B67; /* Secondary text — dates, captions, helper text — on `paper` and `surface`. */
-  --accent: #344945; /* Viridian. Primary / positive action buttons. Text on it is `on-color`. */
+  --accent: #A9CCDD; /* Light blue. Primary action buttons. Text on it is `ink` (5.7:1+). */
+  --accent-edge: #5E8FA8; /* Darker blue border on `accent` buttons so they hold their shape on light pages (3.2:1). */
   --brand: #D5E3E8; /* Sky alias for soft brand fills. Prefer `sky`. Text on it is `ink`. */
   --success: #DCE8D6; /* Soft green fill for on-time / success tags. Text on it is `success-ink`. */
   --success-ink: #2A4A32; /* Dark green text on `success`. */
@@ -22,7 +23,7 @@
   --danger-soft: #F8E0DC; /* Soft red fill for overdue status tags. Text on it is `danger-ink`. */
   --danger-ink: #9B2F24; /* Dark red text on `danger-soft` (≥4.5:1). */
   --on-color: #F7F5F1; /* Text and icons on solid `accent` and `danger` fills. */
-  --focus: #344945; /* 2px solid focus ring, offset 2px, on every surface. */
+  --focus: #22313C; /* 2px solid focus ring, offset 2px, on every surface. */
   --font-display: "Fraunces", Georgia, serif;
   --font-sans: "Instrument Sans", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
