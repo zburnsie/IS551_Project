@@ -4,7 +4,6 @@ import type { Activity } from '../data/types'
 import { activityLink, describeActivity } from '../lib/activity'
 import { formatTimestamp } from '../lib/format'
 import { Avatar } from './Avatar'
-import { Tag } from './Tag'
 
 export function ActivityList({ items, showUnread = false }: { items: Activity[]; showUnread?: boolean }) {
   const { me, userOf, nameOf } = useApp()
@@ -20,7 +19,12 @@ export function ActivityList({ items, showUnread = false }: { items: Activity[];
               <span className="text-body">{describeActivity(a, nameOf)}</span>
               <span className="text-caption text-ink-muted">{formatTimestamp(a.at)}</span>
             </div>
-            {showUnread && !a.readBy.includes(me!.id) && <Tag tone="brand">New</Tag>}
+            {showUnread && !a.readBy.includes(me!.id) && (
+              <span className="inline-flex size-2 shrink-0 items-center justify-center">
+                <span className="size-2 rounded-pill bg-sky" aria-hidden="true" />
+                <span className="sr-only">Unread</span>
+              </span>
+            )}
           </div>
         )
         return <li key={a.id}>{link ? <Link to={link} className="block hover:bg-paper">{body}</Link> : body}</li>

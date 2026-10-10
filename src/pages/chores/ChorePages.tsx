@@ -34,7 +34,7 @@ const byDueDate = (a: Chore, b: Chore) => a.dueDate.localeCompare(b.dueDate)
 function ChoresTabs() {
   const tabs = [
     { to: '/chores', label: 'Areas' },
-    { to: '/chores/overview', label: 'House overview' },
+    { to: '/chores/overview', label: 'House Overview' },
   ]
   return (
     <nav className="flex gap-1 self-start rounded-md border border-rule bg-surface p-1" aria-label="Chores">
@@ -44,7 +44,7 @@ function ChoresTabs() {
           to={t.to}
           end
           className={({ isActive }) =>
-            `text-label rounded-sm px-4 py-1 ${isActive ? 'bg-accent text-on-color' : 'text-ink-muted hover:text-ink'}`
+            `text-label rounded-sm px-4 py-1 ${isActive ? 'bg-sky text-ink' : 'text-ink-muted hover:text-ink'}`
           }
         >
           {t.label}
@@ -104,7 +104,7 @@ function AreaMembersPicker({ picker }: { picker: ReturnType<typeof useAreaMember
       {!picker.everyone && (
         <div className="flex flex-wrap gap-2 pt-2">
           {members.map((m) => (
-            <label key={m.id} className="text-label flex cursor-pointer items-center gap-2 rounded-pill border border-rule bg-paper py-1 pl-1 pr-4 has-[:checked]:border-accent">
+            <label key={m.id} className="text-label flex cursor-pointer items-center gap-2 rounded-pill border border-rule bg-paper py-1 pl-1 pr-4 has-[:checked]:border-ink">
               <input type="checkbox" className="sr-only" checked={picker.picked.includes(m.id)} onChange={() => picker.toggle(m.id)} />
               <Avatar user={m} size="sm" />
               {m.id === me!.id ? 'You' : m.name}
@@ -128,7 +128,7 @@ export function ChoresIndexPage() {
 
   return (
     <>
-      <PageHeader title="Chores" action={<ButtonLink to="/chores/lists/new">New area</ButtonLink>}>
+      <PageHeader title="Chores" action={<ButtonLink to="/chores/lists/new" variant="primary">New Area</ButtonLink>}>
         Split the place into areas, like the kitchen or a bathroom, and choose who shares each one.
       </PageHeader>
       <ChoresTabs />
@@ -148,12 +148,12 @@ export function ChoresIndexPage() {
               const unassigned = open.filter((c) => !c.assignedTo).length
               return (
                 <li key={list.id}>
-                  <Link to={`/chores/lists/${list.id}`} className="flex h-full flex-col gap-2 rounded-md border border-rule bg-surface p-4 hover:border-accent">
+                  <Link to={`/chores/lists/${list.id}`} className="flex h-full flex-col gap-2 rounded-md border border-rule bg-surface p-4 hover:border-ink">
                     <span className="text-heading">{list.name}</span>
                     <AreaMembers list={list} />
                     <span className="flex flex-wrap gap-2">
                       <Tag>{open.length} to do</Tag>
-                      {overdue > 0 && <Tag tone="brand">{overdue} overdue</Tag>}
+                      {overdue > 0 && <Tag tone="danger">{overdue} overdue</Tag>}
                       {unassigned > 0 && <Tag tone="brand">{unassigned} need someone</Tag>}
                     </span>
                   </Link>
@@ -165,7 +165,7 @@ export function ChoresIndexPage() {
       )}
 
       {mine.length > 0 && (
-        <Section title="Assigned to you">
+        <Section title="Assigned to You">
           <ul className="flex flex-col gap-2">
             {mine.map((c) => (
               <li key={c.id}><ChoreRow chore={c} showList /></li>
@@ -255,7 +255,7 @@ export function ChoresOverviewPage() {
               role="radio"
               aria-checked={period === p}
               onClick={() => setPeriod(p)}
-              className={`text-label rounded-sm px-4 py-1 ${period === p ? 'bg-accent text-on-color' : 'text-ink-muted hover:text-ink'}`}
+              className={`text-label rounded-sm px-4 py-1 ${period === p ? 'bg-sky text-ink' : 'text-ink-muted hover:text-ink'}`}
             >
               {periods[p].label}
             </button>
@@ -289,12 +289,12 @@ export function ChoresOverviewPage() {
                   type="button"
                   aria-pressed={selected}
                   onClick={() => setWho(selected ? '' : r.user.id)}
-                  className={`flex h-full w-full flex-col gap-4 rounded-md border bg-surface p-4 text-left hover:border-accent ${selected ? 'border-accent' : 'border-rule'}`}
+                  className={`flex h-full w-full flex-col gap-4 rounded-md border bg-surface p-4 text-left hover:border-ink ${selected ? 'border-ink' : 'border-rule'}`}
                 >
                   <span className="flex items-center gap-2">
                     <Avatar user={r.user} />
                     <span className="text-body flex-1">{r.user.id === me!.id ? 'You' : r.user.name}</span>
-                    {selected && <Tag tone="accent">Showing</Tag>}
+                    {selected && <Tag tone="brand">Showing</Tag>}
                   </span>
                   <dl className="grid grid-cols-3 gap-2">
                     <div className="flex flex-col gap-1">
@@ -307,7 +307,7 @@ export function ChoresOverviewPage() {
                     </div>
                     <div className="flex flex-col gap-1">
                       <dt className="text-caption text-ink-muted">Overdue</dt>
-                      <dd className={`text-amount ${r.overdue > 0 ? 'text-brand' : ''}`}>{r.overdue}</dd>
+                      <dd className={`text-amount ${r.overdue > 0 ? 'text-danger' : ''}`}>{r.overdue}</dd>
                     </div>
                   </dl>
                   {r.covered > 0 && (
@@ -363,7 +363,7 @@ export function CreateChoreListPage() {
 
   return (
     <>
-      <PageHeader title="New area" back={{ to: '/chores', label: 'Chores' }}>
+      <PageHeader title="New Area" back={{ to: '/chores', label: 'Chores' }}>
         A part of the place with its own chores. Choose who shares it, and only they’ll take turns.
       </PageHeader>
       <Card>
@@ -373,7 +373,7 @@ export function CreateChoreListPage() {
           </Field>
           <div className="flex flex-wrap gap-2">
             {['Kitchen', 'Bathroom', 'Living room', 'Spare room', 'Laundry'].map((idea) => (
-              <button key={idea} type="button" className="text-caption rounded-pill border border-rule bg-paper px-2 py-1 hover:border-accent" onClick={() => setName(idea)}>
+              <button key={idea} type="button" className="text-caption rounded-pill border border-rule bg-paper px-2 py-1 hover:border-ink" onClick={() => setName(idea)}>
                 {idea}
               </button>
             ))}
@@ -485,7 +485,7 @@ export function ChoreListPage() {
       </Section>
 
       {done.length > 0 && (
-        <Section title="Done" action={<Link to="/chores/overview" className="text-label underline">House overview</Link>}>
+        <Section title="Done" action={<Link to="/chores/overview" className="text-label underline">House Overview</Link>}>
           <CompletionList items={done.slice(0, 10)} showArea={false} />
         </Section>
       )}
@@ -528,7 +528,7 @@ export function AddChorePage() {
               </Field>
               <div className="flex flex-wrap gap-2">
                 {[0, 1, 7].map((n) => (
-                  <button key={n} type="button" className="text-caption rounded-pill border border-rule bg-paper px-2 py-1 hover:border-accent" onClick={() => setDueDate(addDays(todayIso(), n))}>
+                  <button key={n} type="button" className="text-caption rounded-pill border border-rule bg-paper px-2 py-1 hover:border-ink" onClick={() => setDueDate(addDays(todayIso(), n))}>
                     {n === 0 ? 'Today' : n === 1 ? 'Tomorrow' : 'In a week'}
                   </button>
                 ))}
@@ -754,7 +754,7 @@ export function ChoreDonePage() {
   return (
     <>
       <section className="flex flex-col items-start gap-4 rounded-md border border-accent bg-surface p-8">
-        <Tag tone="accent">Done</Tag>
+        <Tag tone="success">Done</Tag>
         <h1 className="text-title">“{chore.title}” is done</h1>
         <p className="text-body text-ink-muted">
           {covered && `Thanks for covering for ${nameOf(wasAssignedTo)}. `}
@@ -774,7 +774,7 @@ export function ChoreDonePage() {
 
       <div className="flex flex-wrap gap-2">
         <ButtonLink to={`/chores/lists/${list.id}`}>Back to {list.name}</ButtonLink>
-        <ButtonLink to="/chores/overview" variant="secondary">House overview</ButtonLink>
+        <ButtonLink to="/chores/overview" variant="secondary">House Overview</ButtonLink>
       </div>
     </>
   )
