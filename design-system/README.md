@@ -15,6 +15,8 @@ Palette: Shell (`paper`), Stone (`rule`), Sky (`sky`), Honeydew (`highlight`), V
 - Build every screen on `paper`; raise cards and rows on `surface` with a 1px `rule` border — no drop shadows.
 - Set text in `ink`; secondary text in `ink-muted`. Money amounts are `positive` (green) when owed to you and `danger` (red) when you owe, and `ink` when neither applies — always say who owes whom in words too, never by color alone.
 - `accent` (viridian) is for primary action buttons — Done, confirm, settle, New Area, Log an IOU. Text on it is `on-color`.
+- `positive` (green) is also the fill for the `confirm` button variant: Yes, confirm · Confirm paid · Mark paid · Mark complete. Text on it is `on-color`.
+- Delete buttons (Delete chore, Delete area) use the `danger` button variant, like Decline and Withdraw.
 - Status tags use **light tinted fills with dark text** so they never look like buttons:
   - `sky` + `ink` — informational (New, Waiting to confirm, Marked paid by one)
   - `success` + `success-ink` — on time / done / settled

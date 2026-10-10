@@ -33,7 +33,7 @@ export function PrototypeBar() {
     <aside ref={bar} className="sticky bottom-0 z-10 border-t border-rule bg-surface text-ink" aria-label="Prototype notice and testing tools">
       {/* The notice only needs saying once, on the homepage. */}
       {pathname === '/' && (
-        <div className="bg-ink text-on-color">
+        <div className="border-b border-accent-edge bg-accent text-ink">
           <p className="text-label mx-auto flex max-w-3xl flex-wrap items-baseline gap-x-2 px-4 py-1 md:px-8">
             <span className="text-caption font-medium">Prototype · for testing only</span>
             <span>Not a real app yet. Accounts are made up and nothing leaves this browser.</span>

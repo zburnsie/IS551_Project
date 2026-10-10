@@ -428,7 +428,7 @@ export function EditChoreListPage() {
         </p>
         <div>
           <Button
-            variant="secondary"
+            variant="danger"
             onClick={() => {
               if (!confirm(`Delete “${list.name}” and its chores for everyone in the room?`)) return
               deleteChoreList(list.id)
@@ -690,7 +690,7 @@ export function ChoreDetailPage() {
             <Button variant="secondary" onClick={() => reopenChore(chore.id)}>Reopen</Button>
           ) : (
             <Button
-              variant="accent"
+              variant="confirm"
               disabled={!chore.assignedTo}
               onClick={() => {
                 const wasAssignedTo = chore.assignedTo
@@ -705,7 +705,7 @@ export function ChoreDetailPage() {
             {chore.assignedTo ? 'Reassign' : 'Assign'}
           </ButtonLink>
           <Button
-            variant="secondary"
+            variant="danger"
             onClick={() => {
               if (!confirm(`Delete “${chore.title}” for everyone in the room?`)) return
               deleteChore(chore.id)
