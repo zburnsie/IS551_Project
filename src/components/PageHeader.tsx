@@ -47,9 +47,9 @@ export function Flash() {
   )
 }
 
-export function EmptyState({ title, children }: { title: string; children?: ReactNode }) {
+export function EmptyState({ title, children, className = '' }: { title: string; children?: ReactNode; className?: string }) {
   return (
-    <div className="flex flex-col items-start gap-2 rounded-md border border-dashed border-rule p-8">
+    <div className={`flex flex-col items-start gap-2 rounded-md border border-dashed border-rule p-8 ${className}`}>
       <p className="text-heading">{title}</p>
       {children}
     </div>

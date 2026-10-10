@@ -28,7 +28,7 @@ export function CompletionList({ items, showArea = true }: { items: ChoreComplet
                 {showArea && area && ` · ${area.name}`}
               </span>
             </div>
-            {late === 0 ? <Tag tone="accent">On time</Tag> : <Tag>{late} {late === 1 ? 'day' : 'days'} late</Tag>}
+            {late === 0 ? <Tag tone="success">On time</Tag> : <Tag tone="olive">{late} {late === 1 ? 'day' : 'days'} late</Tag>}
           </div>
         )
         // Deleted chores stay in the history but have nowhere to link to.

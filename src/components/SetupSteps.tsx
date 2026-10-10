@@ -15,7 +15,7 @@ export function SetupSteps() {
     <ol className="flex gap-2" aria-label="Setup steps">
       {steps.map((s, i) => (
         <li key={s.path} className="flex flex-1 flex-col gap-1" aria-current={i === current ? 'step' : undefined}>
-          <span className={`h-1 rounded-pill ${i <= current ? 'bg-brand' : 'bg-rule'}`} />
+          <span className={`h-1 rounded-pill ${i <= current ? 'bg-ink' : 'bg-rule'}`} />
           <span className={`text-caption ${i === current ? 'text-ink' : 'text-ink-muted'}`}>
             {i + 1}. {s.label}
           </span>

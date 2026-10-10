@@ -2,16 +2,26 @@
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Instrument+Sans:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-  --paper: #F7F1E8; /* Page background — warm cream ground for every screen. */
-  --surface: #FFFBF5; /* Cards, sheets, list rows and inputs raised off `paper`. */
-  --rule: #E3D7C6; /* Hairline dividers between rows and sections; card borders instead of shadows. */
-  --ink: #2A211B; /* Headlines, body copy and amounts on `paper`, `surface` and `highlight`. */
-  --ink-muted: #6B5B4E; /* Secondary text — dates, captions, helper text — on `paper` and `surface` (≥5.7:1). */
-  --brand: #B5532F; /* Terracotta. Primary actions, the app's identity, and money you owe (always with a word like “You owe”). Text on it is `on-color`. */
-  --accent: #4F6B3A; /* Olive. Chores, done/settled states and money owed to you (always with a word like “Owed to you”). Text on it is `on-color`. */
-  --highlight: #E6B84A; /* Mustard. Due-soon chores, today markers, and a soft fill behind a key number. Text on it is `ink`, never white. */
-  --on-color: #FFFBF5; /* Text and icons on `brand` and `accent` fills (≥4.8:1). */
-  --focus: #2A211B; /* 2px solid focus ring, offset 2px, on every surface. */
+  --paper: #F7F5F1; /* Shell. Page background for every screen. */
+  --surface: #FFFFFF; /* Cards, sheets, list rows and inputs raised off `paper`. */
+  --rule: #E0DCD1; /* Stone. Hairline dividers and card borders — no drop shadows. */
+  --sky: #D5E3E8; /* Soft fills, selected chrome, and informational tags. Text on it is `ink`. */
+  --highlight: #E4E3BC; /* Honeydew. Soft fill / action-needed tags. Text on it is `ink`. */
+  --ink: #344945; /* Viridian. Headlines, body copy and amounts on light surfaces. */
+  --ink-muted: #5C6B67; /* Secondary text — dates, captions, helper text — on `paper` and `surface`. */
+  --accent: #344945; /* Viridian. Primary / positive action buttons. Text on it is `on-color`. */
+  --brand: #D5E3E8; /* Sky alias for soft brand fills. Prefer `sky`. Text on it is `ink`. */
+  --success: #DCE8D6; /* Soft green fill for on-time / success tags. Text on it is `success-ink`. */
+  --success-ink: #2A4A32; /* Dark green text on `success`. */
+  --success-mid: #BCCCB8; /* One shade darker than `success` — on-time chart bars. */
+  --olive: #EBE4C8; /* Soft olive fill for completed-late tags. Text on it is `olive-ink`. */
+  --olive-ink: #4A4520; /* Dark olive text on `olive`. */
+  --olive-mid: #CEC7AA; /* One shade darker than `olive` — late chart bars. */
+  --danger: #C23B2E; /* Solid red for overdue counts and destructive buttons. Text on it is `on-color`. */
+  --danger-soft: #F8E0DC; /* Soft red fill for overdue status tags. Text on it is `danger-ink`. */
+  --danger-ink: #9B2F24; /* Dark red text on `danger-soft` (≥4.5:1). */
+  --on-color: #F7F5F1; /* Text and icons on solid `accent` and `danger` fills. */
+  --focus: #344945; /* 2px solid focus ring, offset 2px, on every surface. */
   --font-display: "Fraunces", Georgia, serif;
   --font-sans: "Instrument Sans", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;

@@ -5,19 +5,21 @@ import { Button } from '../../components/Button'
 import { Section } from '../../components/Card'
 import { ConfettiToast } from '../../components/ConfettiToast'
 import { EmptyState, Flash } from '../../components/PageHeader'
+import { Tag } from '../../components/Tag'
 import { useApp } from '../../data/store'
+import { moneyBalance } from '../../lib/balances'
 import { daysUntil, firstName, formatDate, formatMoney } from '../../lib/format'
 
-function dueLabel(dueDate: string): string {
+function DueCaption({ dueDate }: { dueDate: string }) {
   const days = daysUntil(dueDate)
-  if (days < 0) return `was due ${formatDate(dueDate)}`
-  if (days === 0) return 'due today'
-  if (days === 1) return 'due tomorrow'
-  return `due ${formatDate(dueDate)}`
+  if (days < 0) return <Tag tone="danger">Was due {formatDate(dueDate)}</Tag>
+  if (days === 0) return <span className="text-caption text-ink-muted">due today</span>
+  if (days === 1) return <span className="text-caption text-ink-muted">due tomorrow</span>
+  return <span className="text-caption text-ink-muted">due {formatDate(dueDate)}</span>
 }
 
 export function RoomHomePage() {
-  const { me, room, state, completeChore } = useApp()
+  const { me, room, members, state, completeChore } = useApp()
   const [toast, setToast] = useState<string | null>(null)
   const roomListIds = new Set(state.choreLists.filter((l) => l.roomId === room!.id).map((l) => l.id))
   const roomChores = state.chores.filter((c) => roomListIds.has(c.listId))
@@ -27,14 +29,23 @@ export function RoomHomePage() {
     .filter((c) => c.assignedTo === me!.id && !c.done)
     .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
 
-  const youOweCents = roomIous
-    .filter((i) => i.status === 'open' && i.kind === 'money' && i.debtor === me!.id)
-    .reduce((sum, i) => sum + i.amountCents, 0)
+  const netCents = members
+    .filter((m) => m.id !== me!.id)
+    .reduce((sum, m) => sum + moneyBalance(roomIous, me!.id, m.id), 0)
   const needsOk = roomIous.filter((i) => i.status === 'pending' && i.waitingOn === me!.id).length
 
   const choreFeed = state.activity
     .filter((a) => a.roomId === room!.id && (a.kind === 'chore-done' || a.kind === 'chore-assigned' || a.kind === 'list-created'))
     .slice(0, 6)
+
+  const balanceLabel =
+    netCents > 0 ? (
+      <>You’re owed <span className="text-amount text-ink">{formatMoney(netCents)}</span></>
+    ) : netCents < 0 ? (
+      <>You owe <span className="text-amount text-ink">{formatMoney(-netCents)}</span></>
+    ) : (
+      'You’re even'
+    )
 
   return (
     <>
@@ -44,10 +55,18 @@ export function RoomHomePage() {
         <h1 className="text-title">Hi, {firstName(me!.name)}</h1>
       </header>
 
-      <Section title="Your chores" action={<Link to="/chores" className="text-label underline">All chores</Link>}>
+      <section
+        className={`flex flex-col gap-4 rounded-md border-2 p-4 ${
+          myChores.length === 0 ? 'border-success bg-success' : 'border-accent bg-surface'
+        }`}
+      >
+        <div className="flex items-center justify-between gap-4">
+          <h2 className={`text-heading ${myChores.length === 0 ? 'text-success-ink' : 'text-ink'}`}>Your Chores</h2>
+          <Link to="/chores" className={`text-label underline ${myChores.length === 0 ? 'text-success-ink' : 'text-ink'}`}>All chores</Link>
+        </div>
         {myChores.length === 0 ? (
-          <EmptyState title="You’re clear">
-            <p className="text-body text-ink-muted">When someone assigns you a chore, it shows up here.</p>
+          <EmptyState title="All done" className="border-success bg-surface text-success-ink">
+            <p className="text-body text-success-ink">When someone assigns you a chore, it shows up here.</p>
           </EmptyState>
         ) : (
           <ul className="flex flex-col gap-2">
@@ -59,7 +78,7 @@ export function RoomHomePage() {
                 <Link to={`/chores/${chore.id}`} className="text-body min-w-0 flex-1 hover:underline">
                   {chore.title}
                 </Link>
-                <span className="text-caption text-ink-muted">{dueLabel(chore.dueDate)}</span>
+                <DueCaption dueDate={chore.dueDate} />
                 <Button
                   variant="accent"
                   type="button"
@@ -74,31 +93,27 @@ export function RoomHomePage() {
             ))}
           </ul>
         )}
-      </Section>
+      </section>
 
-      <section className="flex flex-col gap-2">
-        <h2 className="text-label text-ink-muted">Balance</h2>
+      <section className="flex flex-col gap-2 opacity-80">
+        <h2 className="text-caption text-ink-muted">Balance</h2>
         <div className="grid grid-cols-2 gap-2">
           <Link
             to="/money"
-            className="rounded-md border border-rule bg-surface px-4 py-3 text-body text-ink-muted hover:border-brand"
+            className="rounded-md border border-rule bg-paper px-4 py-2 text-body text-ink-muted hover:border-rule"
           >
-            {youOweCents > 0 ? (
-              <>you owe <span className="text-amount text-ink">{formatMoney(youOweCents)}</span></>
-            ) : (
-              'you owe nothing'
-            )}
+            {balanceLabel}
           </Link>
           <Link
             to="/money"
-            className="rounded-md border border-rule bg-surface px-4 py-3 text-body text-ink-muted hover:border-brand"
+            className="rounded-md border border-rule bg-paper px-4 py-2 text-body text-ink-muted hover:border-rule"
           >
-            needs OK: <span className="text-amount text-ink">{needsOk}</span>
+            Needs OK: <span className="text-amount">{needsOk}</span>
           </Link>
         </div>
       </section>
 
-      <Section title="Room activity">
+      <Section title="Room Activity">
         {choreFeed.length > 0 ? (
           <ActivityList items={choreFeed} />
         ) : (

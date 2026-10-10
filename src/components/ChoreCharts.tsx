@@ -1,17 +1,13 @@
 import { useState } from 'react'
+import { tokens } from '../../design-system/tokens'
 import type { User, UserId } from '../data/types'
 import { Avatar } from './Avatar'
 
-/**
- * Chart colors: steps of the brand's olive and mustard with enough color for
- * small marks, checked to stay apart for color-blind readers. Mustard is light
- * on `surface`, so every bar also carries its number and a legend.
- */
+/** Chart bars: one shade darker than the On time / Days late pill fills. */
 const chart = {
-  onTime: '#4A7328',
-  late: '#D19A2A',
-  /** Lighter step of olive for the empty part of a meter. */
-  track: '#DCE5D0',
+  onTime: tokens.color['success-mid'],
+  late: tokens.color['olive-mid'],
+  track: tokens.color.rule,
 }
 
 const BAR = 20 // px, bar thickness

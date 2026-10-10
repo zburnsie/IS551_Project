@@ -10,8 +10,8 @@ import { IouStatusTag } from '../../components/status'
 import { Tag } from '../../components/Tag'
 import { Toast, type ToastState } from '../../components/Toast'
 import { useApp } from '../../data/store'
-import type { Activity, Iou } from '../../data/types'
-import { describeActivity } from '../../lib/activity'
+import type { Iou } from '../../data/types'
+import { activityLink, describeActivity } from '../../lib/activity'
 import { iouValue, moneyBalance, openIousBetween, paidMarkNeeded } from '../../lib/balances'
 import { formatDate, formatMoney, formatTimestamp } from '../../lib/format'
 
@@ -48,9 +48,9 @@ function useMarkPaid() {
 }
 
 /** A non-money IOU ("a dinner"), marked with a gift symbol so it never reads as a dollar amount. */
-function FavorMark({ favor, owedToMe, label }: { favor: string; owedToMe: boolean; label?: string }) {
+function FavorMark({ favor, label }: { favor: string; owedToMe?: boolean; label?: string }) {
   return (
-    <span className={`text-label inline-flex items-center gap-1 ${owedToMe ? 'text-accent' : 'text-brand'}`}>
+    <span className="text-label inline-flex items-center gap-1 text-ink">
       <svg aria-hidden="true" viewBox="0 0 16 16" className="size-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round">
         <rect x="2" y="6" width="12" height="3" />
         <path d="M3 9v5h10V9M8 6v8M8 6C6.5 6 4.5 5.5 4.5 3.75S7 2 8 6Zm0 0c1.500 0 3.500-.5 3.500-2.250S9 2 8 6Z" />
@@ -68,23 +68,31 @@ function IouRow({ iou }: { iou: Iou }) {
   const sentence = useIouSentence()
   const owedToMe = iou.creditor === me!.id
   const otherId = owedToMe ? iou.debtor : iou.creditor
+  const needsMyConfirm = iou.status === 'pending' && iou.waitingOn === me!.id
   const canMark = iou.status === 'open' && !iou.paidMarks.includes(me!.id)
   const theyMarked = iou.paidMarks.includes(otherId)
   return (
-    <div className="flex flex-col rounded-md border border-rule bg-surface hover:border-accent sm:flex-row sm:items-center">
+    <div className="flex flex-col rounded-md border border-rule bg-surface hover:border-ink sm:flex-row sm:items-center">
       <Link to={`/money/ious/${iou.id}`} className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 p-4 sm:flex sm:gap-4">
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <span className="text-body">{sentence(iou)}{iou.kind === 'favor' && ` ${iou.favor}`}</span>
           <span className="text-caption text-ink-muted">{formatDate(iou.date)} · {iou.note}</span>
         </div>
         {/* On phones the status drops below, so the sentence and amount share the top line. */}
-        <span className="order-last col-span-2 sm:order-none"><IouStatusTag iou={iou} /></span>
+        {!needsMyConfirm && (
+          <span className="order-last col-span-2 sm:order-none"><IouStatusTag iou={iou} /></span>
+        )}
         {iou.kind === 'money' ? (
-          <span className={`text-amount text-right ${owedToMe ? 'text-accent' : 'text-brand'}`}>{formatMoney(iou.amountCents)}</span>
+          <span className="text-amount text-right text-ink">{formatMoney(iou.amountCents)}</span>
         ) : (
           <FavorMark favor={iou.favor} owedToMe={owedToMe} />
         )}
       </Link>
+      {needsMyConfirm && (
+        <div className="flex flex-col px-4 pb-4 sm:py-4 sm:pl-0">
+          <ButtonLink to={`/money/ious/${iou.id}`} variant="primary">Confirm</ButtonLink>
+        </div>
+      )}
       {canMark && (
         <div className="flex flex-col px-4 pb-4 sm:py-4 sm:pl-0">
           <Button variant={theyMarked ? 'primary' : 'accent'} onClick={() => markPaid(otherId, [iou])}>
@@ -107,7 +115,7 @@ export function MoneyPage() {
 
   return (
     <>
-      <PageHeader title="Money and IOUs" action={<ButtonLink to="/money/new" variant="accent">Log an IOU</ButtonLink>} />
+      <PageHeader title="Money and IOUs" action={<ButtonLink to="/money/new" variant="primary">Log an IOU</ButtonLink>} />
       <Toast />
 
       <Section title="Balances">
@@ -123,23 +131,36 @@ export function MoneyPage() {
               const open = openIousBetween(ious, me!.id, m.id)
               const favors = open.filter((i) => i.kind === 'favor')
               const name = m.name.split(' ')[0]
-              // Direction is shown by color (green: owed to you, red: you owe), with words for screen readers only.
-              const direction = cents > 0 ? `${name} owes you` : cents < 0 ? `You owe ${name}` : ''
+              let label: string
+              if (open.length === 0) {
+                label = `You and ${name} are even`
+              } else if (cents !== 0) {
+                label = cents > 0 ? `${name} owes you` : `You owe ${name}`
+              } else if (favors.length === 1) {
+                const f = favors[0]!
+                label = f.creditor === me!.id ? `${name} owes you ${f.favor}` : `You owe ${name} ${f.favor}`
+              } else if (favors.every((f) => f.creditor === me!.id)) {
+                label = `${name} owes you`
+              } else if (favors.every((f) => f.debtor === me!.id)) {
+                label = `You owe ${name}`
+              } else {
+                label = `Open favors with ${name}`
+              }
               return (
                 <li key={m.id}>
                   <Card className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 sm:flex">
                     <Avatar user={m} />
                     <div className="flex min-w-0 flex-1 flex-col gap-1">
-                      <span className="text-body">
-                        {open.length === 0 ? `No outstanding balance with ${name}` : `Outstanding balance with ${name}`}
-                      </span>
+                      <span className="text-body">{label}</span>
                     </div>
                     <div className="flex flex-col items-end gap-1">
-                      {(cents !== 0 || favors.length === 0) && (
-                        <span className={`text-amount ${cents > 0 ? 'text-accent' : cents < 0 ? 'text-brand' : ''}`}>
-                          {direction && <span className="sr-only">{direction} </span>}
+                      {cents !== 0 && (
+                        <span className="text-amount text-ink">
                           {formatMoney(Math.abs(cents))}
                         </span>
+                      )}
+                      {cents === 0 && favors.length === 0 && open.length === 0 && (
+                        <span className="text-amount text-ink">{formatMoney(0)}</span>
                       )}
                       {favors.map((f) => (
                         <FavorMark key={f.id} favor={f.favor} owedToMe={f.creditor === me!.id} label={f.debtor === me!.id ? `You owe ${name}` : `${name} owes you`} />
@@ -159,7 +180,7 @@ export function MoneyPage() {
       </Section>
 
       {pending.length > 0 && (
-        <Section title="Waiting to be confirmed">
+        <Section title="To Confirm">
           <ul className="flex flex-col gap-2">
             {pending.map((i) => <li key={i.id}><IouRow iou={i} /></li>)}
           </ul>
@@ -261,7 +282,7 @@ export function LogIouPage() {
                 role="radio"
                 aria-checked={kind === k}
                 onClick={() => setKind(k)}
-                className={`text-label rounded-sm px-4 py-1 ${kind === k ? 'bg-accent text-on-color' : 'text-ink-muted'}`}
+                className={`text-label rounded-sm px-4 py-1 ${kind === k ? 'bg-sky text-ink' : 'text-ink-muted'}`}
               >
                 {k === 'money' ? 'Money' : 'Something else'}
               </button>
@@ -359,7 +380,7 @@ export function IouDetailPage() {
         <dl className="grid gap-4 sm:grid-cols-3">
           <div className="flex flex-col gap-1">
             <dt className="text-caption text-ink-muted">Amount</dt>
-            <dd className={iou.kind === 'money' ? 'text-amount' : 'text-body'}>{iouValue(iou)}</dd>
+            <dd className={iou.kind === 'money' ? 'text-amount text-ink' : 'text-body'}>{iouValue(iou)}</dd>
           </div>
           <div className="flex flex-col gap-1">
             <dt className="text-caption text-ink-muted">For</dt>
@@ -380,7 +401,7 @@ export function IouDetailPage() {
           </p>
         )}
         {iConfirm && (
-          <div className="flex flex-col gap-4 rounded-md border border-brand bg-paper p-4">
+          <div className="flex flex-col gap-4 rounded-md border border-sky bg-paper p-4">
             {suggesting ? (
               <SuggestChangeForm iou={iou} otherName={nameOf(otherId)} onCancel={() => setSuggesting(false)} />
             ) : (
@@ -389,11 +410,11 @@ export function IouDetailPage() {
                   {iou.previous ? `Does ${iouValue(iou)} work for you?` : `${nameOf(iou.createdBy)} logged this. Does it look right to you?`}
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  <Button variant="accent" onClick={() => respondToIou(iou.id, true)}>Yes, confirm</Button>
+                  <Button onClick={() => respondToIou(iou.id, true)}>Yes, confirm</Button>
                   <Button variant="secondary" onClick={() => setSuggesting(true)}>
                     {iou.kind === 'money' ? 'Suggest a different amount' : 'Suggest something else'}
                   </Button>
-                  <Button variant="primary" onClick={() => respondToIou(iou.id, false)}>Decline</Button>
+                  <Button variant="danger" onClick={() => respondToIou(iou.id, false)}>Decline</Button>
                 </div>
               </>
             )}
@@ -403,7 +424,7 @@ export function IouDetailPage() {
           <div className="flex flex-wrap items-center gap-4">
             <p className="text-body flex-1 text-ink-muted">Waiting for {nameOf(otherId)} to confirm.</p>
             {iou.createdBy === me!.id && <Button
-              variant="secondary"
+              variant="danger"
               onClick={() => {
                 setWithdrawn(true)
                 withdrawIou(iou.id)
@@ -462,7 +483,7 @@ export function SettleUpPage() {
         <Toast />
         {justSettled ? (
           <section className="flex flex-col items-start gap-4 rounded-md border border-accent bg-surface p-8">
-            <Tag tone="accent">Settled</Tag>
+            <Tag tone="success">Settled</Tag>
             <h2 className="text-title">You and {name} are all square</h2>
             <p className="text-body text-ink-muted">You both marked everything as paid.</p>
             <ButtonLink to="/money" variant="accent">Back to money</ButtonLink>
@@ -498,9 +519,13 @@ export function SettleUpPage() {
                     {theyMarked && ` · ${name} marked it paid`}
                   </span>
                 </div>
-                {i.kind === 'money' ? <span className="text-amount">{iouValue(i)}</span> : <FavorMark favor={i.favor} owedToMe={i.creditor === me!.id} />}
+                {i.kind === 'money' ? (
+                  <span className="text-amount text-ink">{iouValue(i)}</span>
+                ) : (
+                  <FavorMark favor={i.favor} owedToMe={i.creditor === me!.id} />
+                )}
                 {iMarked ? (
-                  <span className="col-span-2"><Tag tone="accent">You marked paid</Tag></span>
+                  <span className="col-span-2"><Tag tone="success">You marked paid</Tag></span>
                 ) : (
                   <Button variant={theyMarked ? 'primary' : 'accent'} className="col-span-2" onClick={() => markPaid([i])}>
                     {theyMarked ? 'Confirm paid' : 'Mark paid'}
@@ -525,63 +550,10 @@ export function SettleUpPage() {
   )
 }
 
-function inboxDetailLabel(a: Activity): { label: string; link: string | null } {
-  if (a.iouId) return { label: 'View in Money', link: `/money/ious/${a.iouId}` }
-  if (a.choreId) return { label: 'View in Chores', link: `/chores/${a.choreId}` }
-  if (a.listId) return { label: 'View in Chores', link: `/chores/lists/${a.listId}` }
-  if (a.kind === 'iou-marked-paid' || a.kind === 'iou-settled') return { label: 'View in Money', link: `/money/settle/${a.actor}` }
-  return { label: '', link: null }
-}
-
-function InboxItemDetail({ activity }: { activity: Activity }) {
-  const { state, me, nameOf } = useApp()
-  const { label, link } = inboxDetailLabel(activity)
-
-  let detail: string | null = null
-  if (activity.choreId) {
-    const chore = state.chores.find((c) => c.id === activity.choreId)
-    if (chore) {
-      const assignee = chore.assignedTo ? nameOf(chore.assignedTo) : 'Unassigned'
-      detail = `Due ${formatDate(chore.dueDate)} \u00b7 ${assignee}${chore.done ? ' \u00b7 Done' : ''}`
-    }
-  }
-
-  // Build richer detail for IOUs
-  let detailNode: React.ReactNode = null
-  if (activity.iouId) {
-    const iou = state.ious.find((i) => i.id === activity.iouId)
-    if (iou) {
-      const amount = iou.kind === 'money' ? formatMoney(iou.amountCents) : iou.favor
-      const owedToMe = iou.creditor === me?.id
-      detailNode = (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className={`text-body font-mono ${owedToMe ? 'text-accent' : 'text-brand'}`}>{amount}</span>
-          <IouStatusTag iou={iou} />
-          <span className="text-caption text-ink-muted">{nameOf(iou.debtor)} {iou.debtor === me?.id ? 'owe' : 'owes'} {nameOf(iou.creditor, true)}</span>
-        </div>
-      )
-    }
-  } else if (detail) {
-    detailNode = <p className="text-caption text-ink-muted">{detail}</p>
-  }
-
-  return (
-    <div className="flex flex-col gap-2 px-4 pb-4 pt-0 ml-12">
-      {detailNode}
-      {link && (
-        <ButtonLink to={link} variant="secondary" className="self-start">
-          {label} →
-        </ButtonLink>
-      )}
-    </div>
-  )
-}
-
 export function InboxPage() {
-  const { state, me, room, userOf, nameOf, markInboxRead } = useApp()
+  const { state, me, room, userOf, nameOf, markInboxRead, markActivityRead } = useApp()
   const items = state.activity.filter((a) => a.roomId === room!.id && a.notify.includes(me!.id))
   const hasUnread = items.some((a) => !a.readBy.includes(me!.id))
-  const [expandedId, setExpandedId] = useState<string | null>(null)
 
   return (
     <>
@@ -599,23 +571,30 @@ export function InboxPage() {
         <ul className="flex flex-col gap-2">
           {items.map((a) => {
             const actor = userOf(a.actor)
-            const isExpanded = expandedId === a.id
+            const link = activityLink(a)
+            const unread = !a.readBy.includes(me!.id)
+            const body = (
+              <div className="flex items-center gap-4 p-4">
+                {actor && <Avatar user={actor} size="sm" />}
+                <div className="flex min-w-0 flex-1 flex-col gap-1">
+                  <span className="text-body">{describeActivity(a, nameOf)}</span>
+                  <span className="text-caption text-ink-muted">{formatTimestamp(a.at)}</span>
+                </div>
+                {unread && (
+                  <span className="inline-flex size-2 shrink-0 items-center justify-center">
+                    <span className="size-2 rounded-pill bg-sky" aria-hidden="true" />
+                    <span className="sr-only">Unread</span>
+                  </span>
+                )}
+                {link && <span className="text-ink-muted" aria-hidden="true">→</span>}
+              </div>
+            )
             return (
-              <li key={a.id} className="rounded-md border border-rule bg-surface hover:border-accent transition">
-                <button
-                  type="button"
-                  className="flex w-full items-center gap-4 p-4 text-left"
-                  onClick={() => setExpandedId(isExpanded ? null : a.id)}
-                >
-                  {actor && <Avatar user={actor} size="sm" />}
-                  <div className="flex min-w-0 flex-1 flex-col gap-1">
-                    <span className="text-body">{describeActivity(a, nameOf)}</span>
-                    <span className="text-caption text-ink-muted">{formatTimestamp(a.at)}</span>
-                  </div>
-                  {!a.readBy.includes(me!.id) && <Tag tone="brand">New</Tag>}
-                  <span className={`text-ink-muted transition-transform ${isExpanded ? 'rotate-180' : ''}`} aria-hidden="true">▾</span>
-                </button>
-                {isExpanded && <InboxItemDetail activity={a} />}
+              <li
+                key={a.id}
+                className="rounded-md border border-rule bg-surface transition hover:border-ink"
+              >
+                {link ? <Link to={link} className="block" onClick={() => markActivityRead(a.id)}>{body}</Link> : body}
               </li>
             )
           })}
