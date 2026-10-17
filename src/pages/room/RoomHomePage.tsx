@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ActivityList } from '../../components/ActivityList'
-import { Button } from '../../components/Button'
 import { Section } from '../../components/Card'
+import { CompleteButton } from '../../components/CompleteButton'
 import { ConfettiToast } from '../../components/ConfettiToast'
 import { EmptyState, Flash } from '../../components/PageHeader'
 import { Tag } from '../../components/Tag'
@@ -79,16 +79,13 @@ export function RoomHomePage() {
                   {chore.title}
                 </Link>
                 <DueCaption dueDate={chore.dueDate} />
-                <Button
-                  variant="accent"
-                  type="button"
+                <CompleteButton
+                  title={chore.title}
                   onClick={() => {
                     completeChore(chore.id)
                     setToast(`Nice — “${chore.title}” is done`)
                   }}
-                >
-                  Done
-                </Button>
+                />
               </li>
             ))}
           </ul>

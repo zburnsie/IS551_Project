@@ -5,6 +5,7 @@ import { Button, ButtonLink } from '../../components/Button'
 import { Card, Section } from '../../components/Card'
 import { DoneByRoommateChart, HouseProgress } from '../../components/ChoreCharts'
 import { ChoreRow } from '../../components/ChoreRow'
+import { CompleteButton } from '../../components/CompleteButton'
 import { CompletionList } from '../../components/CompletionList'
 import { ChoiceRow, Field, Select, TextArea, TextInput } from '../../components/fields'
 import { EmptyState, PageHeader } from '../../components/PageHeader'
@@ -78,20 +79,13 @@ function AssignedToYou() {
               chore={c}
               showList
               action={
-                <button
-                  type="button"
-                  aria-label={`Mark “${c.title}” complete`}
-                  title="Mark complete"
-                  className="group flex size-8 shrink-0 items-center justify-center rounded-pill border-2 border-ink-muted bg-surface hover:border-success hover:bg-success"
+                <CompleteButton
+                  title={c.title}
                   onClick={() => {
                     completeChore(c.id)
                     navigate('.', { replace: true, state: toast(`Marked “${c.title}” complete.`, { to: `/chores/${c.id}`, label: 'View' }) })
                   }}
-                >
-                  <svg aria-hidden="true" viewBox="0 0 16 16" className="size-4 text-success-ink opacity-0 group-hover:opacity-100" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M3 8.5l3 3 7-7" />
-                  </svg>
-                </button>
+                />
               }
             />
           </li>

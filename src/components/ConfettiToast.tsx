@@ -36,7 +36,7 @@ export function ConfettiToast({ message, onDismiss }: { message: string; onDismi
 
   return (
     <div
-      className="pointer-events-none fixed inset-0 z-50 flex items-start justify-center overflow-hidden pt-10"
+      className="pointer-events-none fixed inset-0 z-50 overflow-hidden"
       role="status"
       aria-labelledby={titleId}
     >
@@ -46,10 +46,10 @@ export function ConfettiToast({ message, onDismiss }: { message: string; onDismi
           100% { transform: translate3d(var(--drift), 100vh, 0) rotate(var(--spin)); opacity: 0; }
         }
         @keyframes cr-toast-in {
-          0% { transform: translateY(-12px); opacity: 0; }
+          0% { transform: translateY(12px); opacity: 0; }
           12% { transform: translateY(0); opacity: 1; }
           75% { transform: translateY(0); opacity: 1; }
-          100% { transform: translateY(-8px); opacity: 0; }
+          100% { transform: translateY(8px); opacity: 0; }
         }
       `}</style>
 
@@ -72,8 +72,9 @@ export function ConfettiToast({ message, onDismiss }: { message: string; onDismi
 
       <p
         id={titleId}
-        className="text-body relative z-10 rounded-md border border-accent bg-surface px-4 py-3"
-        style={{ animation: 'cr-toast-in 2.2s ease forwards' }}
+        className="text-body absolute right-4 z-10 max-w-[calc(100%-2rem)] rounded-md border border-accent bg-surface px-4 py-3"
+        // Bottom right, above the prototype bar, like the other toasts.
+        style={{ bottom: 'calc(var(--prototype-bar-height, 0px) + 16px)', animation: 'cr-toast-in 2.2s ease forwards' }}
       >
         {message}
       </p>
