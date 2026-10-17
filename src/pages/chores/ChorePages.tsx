@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useState, type FormEvent, type ReactNode } from 'react'
 import { Link, Navigate, NavLink, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { Avatar } from '../../components/Avatar'
 import { Button, ButtonLink } from '../../components/Button'
@@ -7,7 +7,8 @@ import { DoneByRoommateChart, HouseProgress } from '../../components/ChoreCharts
 import { ChoreRow } from '../../components/ChoreRow'
 import { CompletionList } from '../../components/CompletionList'
 import { ChoiceRow, Field, Select, TextArea, TextInput } from '../../components/fields'
-import { EmptyState, Flash, PageHeader } from '../../components/PageHeader'
+import { EmptyState, PageHeader } from '../../components/PageHeader'
+import { Toast, type ToastState } from '../../components/Toast'
 import { DueTag } from '../../components/status'
 import { Tag } from '../../components/Tag'
 import { useApp } from '../../data/store'
@@ -30,6 +31,11 @@ function useChore() {
 
 const byDueDate = (a: Chore, b: Chore) => a.dueDate.localeCompare(b.dueDate)
 
+/** Navigation state that shows a toast on the next page. */
+function toast(message: string, link?: ToastState['link']): { toast: ToastState } {
+  return { toast: { message, link } }
+}
+
 /** Switches between the areas and the house overview. */
 function ChoresTabs() {
   const tabs = [
@@ -51,6 +57,62 @@ function ChoresTabs() {
         </NavLink>
       ))}
     </nav>
+  )
+}
+
+/** Your open chores, each with a button to mark it complete. */
+function AssignedToYou() {
+  const { state, me, completeChore } = useApp()
+  const navigate = useNavigate()
+  const listIds = new Set(useRoomLists().map((l) => l.id))
+  const mine = state.chores
+    .filter((c) => listIds.has(c.listId) && c.assignedTo === me!.id && !c.done)
+    .sort(byDueDate)
+  if (mine.length === 0) return null
+  return (
+    <Section title="Assigned to You">
+      <ul className="flex flex-col gap-2">
+        {mine.map((c) => (
+          <li key={c.id}>
+            <ChoreRow
+              chore={c}
+              showList
+              action={
+                <button
+                  type="button"
+                  aria-label={`Mark “${c.title}” complete`}
+                  title="Mark complete"
+                  className="group flex size-8 shrink-0 items-center justify-center rounded-pill border-2 border-ink-muted bg-surface hover:border-success hover:bg-success"
+                  onClick={() => {
+                    completeChore(c.id)
+                    navigate('.', { replace: true, state: toast(`Marked “${c.title}” complete.`, { to: `/chores/${c.id}`, label: 'View' }) })
+                  }}
+                >
+                  <svg aria-hidden="true" viewBox="0 0 16 16" className="size-4 text-success-ink opacity-0 group-hover:opacity-100" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 8.5l3 3 7-7" />
+                  </svg>
+                </button>
+              }
+            />
+          </li>
+        ))}
+      </ul>
+    </Section>
+  )
+}
+
+/** The top of both chores tabs: what's assigned to you, then the tab switcher and a way to add an area. */
+function ChoresTop({ children }: { children?: ReactNode }) {
+  return (
+    <>
+      <PageHeader title="Chores">{children}</PageHeader>
+      <Toast />
+      <AssignedToYou />
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <ChoresTabs />
+        <ButtonLink to="/chores/lists/new" variant="primary">New Area</ButtonLink>
+      </div>
+    </>
   )
 }
 
@@ -117,22 +179,29 @@ function AreaMembersPicker({ picker }: { picker: ReturnType<typeof useAreaMember
   )
 }
 
-/** Areas in the room, plus everything assigned to you. */
-export function ChoresIndexPage() {
+/** Your next turn on each repeating chore, after whoever's turn it is now. Soonest first. */
+function useUpcomingTurns() {
   const { state, me } = useApp()
   const lists = useRoomLists()
-  const listIds = new Set(lists.map((l) => l.id))
-  const mine = state.chores
-    .filter((c) => listIds.has(c.listId) && c.assignedTo === me!.id && !c.done)
-    .sort(byDueDate)
+  return state.chores
+    .filter((c) => c.repeat !== 'none' && !c.done && lists.some((l) => l.id === c.listId))
+    .flatMap((chore) => {
+      // One lap of the rotation past the current turn reaches everyone in it.
+      const next = upcomingTurns(chore, chore.rotation.length + 2).slice(1).find((t) => t.who === me!.id)
+      return next ? [{ chore, due: next.due, list: lists.find((l) => l.id === chore.listId)! }] : []
+    })
+    .sort((a, b) => a.due.localeCompare(b.due))
+}
+
+/** Areas in the room, and your next turns on repeating chores. */
+export function ChoresIndexPage() {
+  const { state } = useApp()
+  const lists = useRoomLists()
+  const upcoming = useUpcomingTurns()
 
   return (
     <>
-      <PageHeader title="Chores" action={<ButtonLink to="/chores/lists/new" variant="primary">New Area</ButtonLink>}>
-        Split the place into areas, like the kitchen or a bathroom, and choose who shares each one.
-      </PageHeader>
-      <ChoresTabs />
-      <Flash />
+      <ChoresTop>Split the place into areas, like the kitchen or a bathroom, and choose who shares each one.</ChoresTop>
 
       {lists.length === 0 ? (
         <EmptyState title="No areas yet">
@@ -164,13 +233,25 @@ export function ChoresIndexPage() {
         </Section>
       )}
 
-      {mine.length > 0 && (
-        <Section title="Assigned to You">
-          <ul className="flex flex-col gap-2">
-            {mine.map((c) => (
-              <li key={c.id}><ChoreRow chore={c} showList /></li>
-            ))}
-          </ul>
+      {lists.length > 0 && (
+        <Section title="Your Upcoming Turns">
+          {upcoming.length === 0 ? (
+            <p className="text-body text-ink-muted">When you’re in the rotation for a repeating chore, your next turn shows up here.</p>
+          ) : (
+            <ul className="flex flex-col divide-y divide-rule rounded-md border border-rule bg-surface">
+              {upcoming.map(({ chore, due, list }) => (
+                <li key={chore.id}>
+                  <Link to={`/chores/${chore.id}`} className="flex flex-wrap items-center gap-4 p-4 hover:bg-paper">
+                    <div className="flex min-w-0 flex-1 flex-col gap-1">
+                      <span className="text-body">{chore.title}</span>
+                      <span className="text-caption text-ink-muted">{repeatLabels[chore.repeat]} · {list.name}</span>
+                    </div>
+                    <DueTag dueDate={due} done={false} />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
         </Section>
       )}
     </>
@@ -225,8 +306,7 @@ export function ChoresOverviewPage() {
   if (lists.length === 0) {
     return (
       <>
-        <PageHeader title="Chores" />
-        <ChoresTabs />
+        <ChoresTop />
         <EmptyState title="Nothing to show yet">
           <p className="text-body text-ink-muted">Add an area and some chores, and you’ll see who’s doing what here.</p>
           <ButtonLink to="/chores/lists/new">Add an area</ButtonLink>
@@ -237,8 +317,7 @@ export function ChoresOverviewPage() {
 
   return (
     <>
-      <PageHeader title="Chores">What’s still to do, whose turn it is, and what everyone has done.</PageHeader>
-      <ChoresTabs />
+      <ChoresTop>What’s still to do, whose turn it is, and what everyone has done.</ChoresTop>
 
       <div className="flex flex-wrap items-end gap-4">
         <Field label="Show">
@@ -358,7 +437,7 @@ export function CreateChoreListPage() {
     e.preventDefault()
     if (!name.trim() || !picker.valid) return
     const id = createChoreList(name.trim(), picker.memberIds)
-    navigate(`/chores/lists/${id}`, { state: { flash: `Added “${name.trim()}”. Add the first chore.` } })
+    navigate(`/chores/lists/${id}`, { state: toast(`Added “${name.trim()}”. Add the first chore.`) })
   }
 
   return (
@@ -402,7 +481,7 @@ export function EditChoreListPage() {
     e.preventDefault()
     if (!name.trim() || !picker.valid) return
     updateChoreList(list.id, { name: name.trim(), memberIds: picker.memberIds })
-    navigate(`/chores/lists/${list.id}`, { state: { flash: 'Saved.' } })
+    navigate(`/chores/lists/${list.id}`, { state: toast(`Saved changes to “${name.trim()}”.`) })
   }
 
   return (
@@ -432,7 +511,7 @@ export function EditChoreListPage() {
             onClick={() => {
               if (!confirm(`Delete “${list.name}” and its chores for everyone in the room?`)) return
               deleteChoreList(list.id)
-              navigate('/chores', { state: { flash: `Deleted “${list.name}”.` } })
+              navigate('/chores', { state: toast(`Deleted “${list.name}”.`) })
             }}
           >
             Delete area
@@ -467,7 +546,7 @@ export function ChoreListPage() {
       >
         <AreaMembers list={list} />
       </PageHeader>
-      <Flash />
+      <Toast />
 
       <Section title="To do">
         {toDo.length === 0 ? (
@@ -583,7 +662,7 @@ export function AssignChorePage() {
     e.preventDefault()
     assignChore(chore.id, assignee, finalRotation)
     navigate(`/chores/${chore.id}`, {
-      state: { flash: assignee === me!.id ? 'It’s on your list.' : `${nameOf(assignee)} was notified.` },
+      state: toast(assignee === me!.id ? `“${chore.title}” is on your list.` : `Assigned “${chore.title}” to ${nameOf(assignee)}. They were notified.`),
     })
   }
 
@@ -663,7 +742,7 @@ export function ChoreDetailPage() {
   return (
     <>
       <PageHeader eyebrow={list.name} title={chore.title} back={{ to: `/chores/lists/${list.id}`, label: list.name }} />
-      <Flash />
+      <Toast />
 
       <Card className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center gap-4">
@@ -687,7 +766,15 @@ export function ChoreDetailPage() {
         {chore.notes && <p className="text-body text-ink-muted">{chore.notes}</p>}
         <div className="flex flex-wrap gap-2">
           {chore.done ? (
-            <Button variant="secondary" onClick={() => reopenChore(chore.id)}>Reopen</Button>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                reopenChore(chore.id)
+                navigate('.', { replace: true, state: toast(`Reopened “${chore.title}”.`) })
+              }}
+            >
+              Reopen
+            </Button>
           ) : (
             <Button
               variant="confirm"
@@ -695,7 +782,7 @@ export function ChoreDetailPage() {
               onClick={() => {
                 const wasAssignedTo = chore.assignedTo
                 completeChore(chore.id)
-                navigate(`/chores/${chore.id}/done`, { state: { wasAssignedTo } })
+                navigate(`/chores/${chore.id}/done`, { state: { wasAssignedTo, ...toast(`Marked “${chore.title}” complete.`) } })
               }}
             >
               Mark complete
@@ -709,7 +796,7 @@ export function ChoreDetailPage() {
             onClick={() => {
               if (!confirm(`Delete “${chore.title}” for everyone in the room?`)) return
               deleteChore(chore.id)
-              navigate(`/chores/lists/${list.id}`, { state: { flash: `Deleted “${chore.title}”.` } })
+              navigate(`/chores/lists/${list.id}`, { state: toast(`Deleted “${chore.title}”.`) })
             }}
           >
             Delete
@@ -753,6 +840,7 @@ export function ChoreDonePage() {
 
   return (
     <>
+      <Toast />
       <section className="flex flex-col items-start gap-4 rounded-md border border-accent bg-surface p-8">
         <Tag tone="success">Done</Tag>
         <h1 className="text-title">“{chore.title}” is done</h1>
