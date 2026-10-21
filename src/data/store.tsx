@@ -3,7 +3,7 @@ import { nextDueDate, nextInRotation } from '../lib/chores'
 import { iouValue } from '../lib/balances'
 import { firstName, todayIso } from '../lib/format'
 import { demoState, emptyState } from './seed'
-import type { Activity, AppState, Chore, ChoreList, Iou, Repeat, Room, User, UserId } from './types'
+import type { Activity, AppState, Chore, ChoreList, HomeLayout, HomeView, Iou, Repeat, Room, User, UserId } from './types'
 
 const STORAGE_KEY = 'common-room:app'
 
@@ -52,6 +52,9 @@ type AppContextValue = {
   logOut: () => void
   updateProfile: (patch: Partial<Pick<User, 'name' | 'dorm' | 'photo'>>) => void
   setPendingCode: (code: string | null) => void
+  /** Saves how you've arranged your room home, or one of its views when the personal / shared flag is on. */
+  setHomeLayout: (home: HomeLayout, view?: HomeView) => void
+  setHomeView: (view: HomeView) => void
 
   // Room
   createRoom: (name: string) => void
@@ -136,6 +139,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     ],
   })
 
+  const updateMe = (change: (u: User) => User) =>
+    setState((s) => ({ ...s, users: s.users.map((u) => (u.id === meId ? change(u) : u)) }))
+
   const updateChore = (s: AppState, id: string, patch: Partial<Chore>): AppState => ({
     ...s,
     chores: s.chores.map((c) => (c.id === id ? { ...c, ...patch } : c)),
@@ -166,6 +172,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     updateProfile: (patch) =>
       setState((s) => ({ ...s, users: s.users.map((u) => (u.id === meId ? { ...u, ...patch } : u)) })),
     setPendingCode: (code) => setState((s) => ({ ...s, pendingCode: code })),
+    setHomeLayout: (home, view) =>
+      updateMe((u) => (view ? { ...u, homeViews: { ...u.homeViews, [view]: home } } : { ...u, home })),
+    setHomeView: (homeView) => updateMe((u) => ({ ...u, homeView })),
 
     createRoom: (name) => {
       const newRoom: Room = { id: newId(), name, code: newRoomCode(), memberIds: [meId] }

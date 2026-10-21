@@ -1,14 +1,26 @@
 import { useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useApp } from '../data/store'
+import { flags, setFlag, useFlag, type Flag } from '../lib/flags'
 import { buttonClass } from './Button'
 
 const toolButton = buttonClass('secondary')
 
+function FlagToggle({ flag }: { flag: Flag }) {
+  const on = useFlag(flag)
+  return (
+    <label className="text-label flex cursor-pointer items-center gap-2" title={flags[flag].description}>
+      <input type="checkbox" className="size-4 accent-accent" checked={on} onChange={(e) => setFlag(flag, e.target.checked)} />
+      {flags[flag].label}
+    </label>
+  )
+}
+
 /**
  * Prototype-only notice and testing tools, kept visually separate from the
  * app: switch which roommate you're acting as (to confirm IOUs or settle up
- * from both sides), load the demo room, or wipe everything.
+ * from both sides), turn feature flags on or off, load the demo room, or
+ * wipe everything.
  */
 export function PrototypeBar() {
   const { me, members, actAs, loadDemo, resetAll } = useApp()
@@ -56,6 +68,9 @@ export function PrototypeBar() {
             </select>
           </label>
         )}
+        {(Object.keys(flags) as Flag[]).map((f) => (
+          <FlagToggle key={f} flag={f} />
+        ))}
         <span className="flex-1" />
         <button
           className={toolButton}

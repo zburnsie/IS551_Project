@@ -10,6 +10,25 @@ export type User = {
   /** Small data-URL image, or null to show initials. */
   photo: string | null
   roomId: string | null
+  /** How they've arranged their room home. Missing means the default layout. */
+  home?: HomeLayout
+  /** With the personal / shared home flag on: which view they last picked, and how each is arranged. */
+  homeView?: HomeView
+  homeViews?: Partial<Record<HomeView, HomeLayout>>
+}
+
+/** A block on the room home page. */
+export type HomeWidget = 'chores' | 'money' | 'activity' | 'upcoming'
+
+/** Your own chores and IOUs, or what's going on around the room. */
+export type HomeView = 'personal' | 'shared'
+
+export type HomeLayout = {
+  /** Shown largest, at the top. */
+  featured: HomeWidget
+  /** The other widgets, in the order they appear under the featured one. */
+  order: HomeWidget[]
+  hidden: HomeWidget[]
 }
 
 export type Room = {
