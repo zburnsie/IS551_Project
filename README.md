@@ -37,6 +37,13 @@ A clickable low-fidelity prototype of the roommate happy path: onboarding, share
 - **Load demo room**: jump into "Dorm 204" as Alex, with chores, IOUs and activity already filled in.
 - **Acting as**: switch to another roommate, so you can confirm an IOU or mark it paid from both sides.
 - **Reset**: clear everything and start from the homepage.
+- **Feature flags**: turn unfinished features on or off in this browser (see below).
+
+**Feature flags.** Flags live in `src/lib/flags.ts`. Each one is off unless its `VITE_FLAG_<NAME>` env var is `true` (for example `VITE_FLAG_HOME_VIEWS=true npm run dev`, or set it in Vercel), and the checkbox in the prototype bar overrides that in your browser.
+
+| Flag | Env var | What it does |
+| --- | --- | --- |
+| Personal / shared home | `VITE_FLAG_HOME_VIEWS` | Adds a Personal / Shared toggle to the room home. Personal shows your chores and IOUs; Shared shows upcoming chores around the room and room activity. Each view is customized on its own. |
 
 Sign-in is simulated: passwords aren't checked or saved, and "Continue with your school account" just asks for a `.edu` email.
 
@@ -55,7 +62,7 @@ Sign-in is simulated: passwords aren't checked or saved, and "Continue with your
 | 7 | Join with a code (invite links `/join/CODE` land here) | `/welcome/join` |
 | 8 | Invite roommates (link / code) | `/welcome/invite`, `/room/invite` |
 | | **Room** | |
-| 9 | Room home: your chores, balance, IOUs to confirm, activity | `/room` |
+| 9 | Room home: your chores, balance, IOUs to confirm, activity. **Customize** picks which is biggest, the order of the rest, and what to hide (saved per roommate) | `/room` |
 | | **2. Shared chores** | |
 | 10 | Areas (kitchen, a shared bathroom…) and who shares each | `/chores` |
 | 11 | House overview: progress, chores done per roommate, what's still to do and whose turn | `/chores/overview` |
