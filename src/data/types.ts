@@ -111,6 +111,7 @@ export type ActivityKind =
   | 'list-created'
   | 'chore-assigned'
   | 'chore-done'
+  | 'chore-nudged'
   | 'iou-logged'
   | 'iou-confirmed'
   | 'iou-countered'

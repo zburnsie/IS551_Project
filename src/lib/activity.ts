@@ -19,6 +19,8 @@ export function describeActivity(a: Activity, nameOf: NameOf): string {
       return a.subject
         ? `${actor} finished “${a.label}”. Next up: ${subject}`
         : `${actor} finished “${a.label}”`
+    case 'chore-nudged':
+      return `${actor} gave ${subject} a gentle nudge about “${a.label}”`
     case 'iou-logged':
       return `${actor} logged an IOU with ${subject}: ${a.label}`
     case 'iou-confirmed':

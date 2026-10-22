@@ -7,6 +7,7 @@ import { Card, Section } from '../../components/Card'
 import { ChoreRow } from '../../components/ChoreRow'
 import { CompleteButton } from '../../components/CompleteButton'
 import { ConfettiToast } from '../../components/ConfettiToast'
+import { canNudge, NudgeButton } from '../../components/NudgeButton'
 import { ChoiceRow } from '../../components/fields'
 import { EmptyState, Flash } from '../../components/PageHeader'
 import { Tag } from '../../components/Tag'
@@ -167,6 +168,7 @@ function ActivityWidget({ size }: { size: Size }) {
 
 /** Chores still to do around the room, soonest first, whoever's turn it is. */
 function UpcomingWidget({ size, chores }: { size: Size; chores: Chore[] }) {
+  const { me } = useApp()
   const shown = chores.slice(0, size === 'large' ? 8 : 3)
   const more = chores.length - shown.length
   const list = (
@@ -175,7 +177,7 @@ function UpcomingWidget({ size, chores }: { size: Size; chores: Chore[] }) {
         <ul className="flex flex-col gap-2">
           {shown.map((chore) => (
             <li key={chore.id}>
-              <ChoreRow chore={chore} showList />
+              <ChoreRow chore={chore} showList action={canNudge(chore, me!.id) ? <NudgeButton chore={chore} compact /> : undefined} />
             </li>
           ))}
         </ul>

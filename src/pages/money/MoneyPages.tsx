@@ -569,7 +569,7 @@ export function InboxPage() {
         title="Inbox"
         action={hasUnread ? <Button variant="secondary" onClick={markInboxRead}>Mark all as read</Button> : undefined}
       >
-        Chores assigned to you, IOUs to confirm, and payments from roommates.
+        Chores assigned to you, nudges from roommates, IOUs to confirm, and payments.
       </PageHeader>
       {items.length === 0 ? (
         <EmptyState title="Nothing new">
@@ -581,6 +581,9 @@ export function InboxPage() {
             const actor = userOf(a.actor)
             const link = activityLink(a)
             const unread = !a.readBy.includes(me!.id)
+            // A nudge asks you to act until the chore is done or no longer yours.
+            const nudgeChore = a.kind === 'chore-nudged' ? state.chores.find((c) => c.id === a.choreId) : undefined
+            const needsAction = !!nudgeChore && nudgeChore.assignedTo === me!.id && !nudgeChore.done
             const body = (
               <div className="flex items-center gap-4 p-4">
                 {actor && <Avatar user={actor} size="sm" />}
@@ -588,6 +591,7 @@ export function InboxPage() {
                   <span className="text-body">{describeActivity(a, nameOf)}</span>
                   <span className="text-caption text-ink-muted">{formatTimestamp(a.at)}</span>
                 </div>
+                {needsAction && <Tag tone="danger">Needs action</Tag>}
                 {unread && (
                   <span className="inline-flex size-2 shrink-0 items-center justify-center">
                     <span className="size-2 rounded-pill bg-sky" aria-hidden="true" />

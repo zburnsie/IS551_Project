@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { nextDueDate, nextInRotation } from '../lib/chores'
 import { iouValue } from '../lib/balances'
-import { firstName, todayIso } from '../lib/format'
+import { dateOf, firstName, todayIso } from '../lib/format'
 import { demoState, emptyState } from './seed'
 import type { Activity, AppState, Chore, ChoreList, HomeLayout, HomeView, Iou, Repeat, Room, User, UserId } from './types'
 
@@ -72,6 +72,10 @@ type AppContextValue = {
   addChore: (chore: { listId: string; title: string; notes: string; dueDate: string; repeat: Repeat }) => string
   assignChore: (choreId: string, assignedTo: UserId, rotation: UserId[]) => void
   completeChore: (choreId: string) => void
+  /** Sends whoever's turn it is a friendly reminder. Once a day per chore, so it stays gentle. */
+  nudgeChore: (choreId: string) => void
+  /** Whether you've already nudged this chore's assignee today. */
+  nudgedToday: (choreId: string) => boolean
   reopenChore: (choreId: string) => void
   deleteChore: (choreId: string) => void
 
@@ -323,6 +327,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
           updateChore(logged(s), choreId, { assignedTo: next, dueDate: nextDueDate(chore.dueDate, chore.repeat) }),
           { kind: 'chore-done', actor: meId, subject: next ?? undefined, label: chore.title, choreId, notify: others },
         ),
+      )
+    },
+    nudgeChore: (choreId) => {
+      const chore = state.chores.find((c) => c.id === choreId)
+      if (!chore?.assignedTo || chore.assignedTo === meId || chore.done || value.nudgedToday(choreId)) return
+      setState((s) =>
+        withActivity(s, {
+          kind: 'chore-nudged',
+          actor: meId,
+          subject: chore.assignedTo!,
+          label: chore.title,
+          choreId,
+          notify: [chore.assignedTo!],
+        }),
+      )
+    },
+    nudgedToday: (choreId) => {
+      const chore = state.chores.find((c) => c.id === choreId)
+      return state.activity.some(
+        (a) =>
+          a.kind === 'chore-nudged' &&
+          a.choreId === choreId &&
+          a.actor === meId &&
+          a.subject === chore?.assignedTo &&
+          dateOf(a.at) === todayIso(),
       )
     },
     reopenChore: (choreId) =>
