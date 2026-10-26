@@ -7,6 +7,7 @@ import { DoneByRoommateChart, HouseProgress } from '../../components/ChoreCharts
 import { ChoreRow } from '../../components/ChoreRow'
 import { CompleteButton } from '../../components/CompleteButton'
 import { CompletionList } from '../../components/CompletionList'
+import { canNudge, NudgeButton } from '../../components/NudgeButton'
 import { ChoiceRow, Field, Select, TextArea, TextInput } from '../../components/fields'
 import { EmptyState, PageHeader } from '../../components/PageHeader'
 import { Toast, type ToastState } from '../../components/Toast'
@@ -403,7 +404,7 @@ export function ChoresOverviewPage() {
             <div key={g.title} className="flex flex-col gap-2">
               <h3 className="text-caption text-ink-muted">{g.title} · {g.chores.length}</h3>
               <ul className="flex flex-col gap-2">
-                {g.chores.map((c) => <li key={c.id}><ChoreRow chore={c} showList /></li>)}
+                {g.chores.map((c) => <li key={c.id}><ChoreRow chore={c} showList action={canNudge(c, me!.id) ? <NudgeButton chore={c} compact /> : undefined} /></li>)}
               </ul>
             </div>
           ))
@@ -518,7 +519,7 @@ export function EditChoreListPage() {
 
 export function ChoreListPage() {
   const { listId = '' } = useParams()
-  const { state } = useApp()
+  const { state, me } = useApp()
   const list = state.choreLists.find((l) => l.id === listId)
   if (!list) return <Navigate to="/chores" replace />
 
@@ -551,7 +552,7 @@ export function ChoreListPage() {
         ) : (
           <ul className="flex flex-col gap-2">
             {toDo.map((c) => (
-              <li key={c.id}><ChoreRow chore={c} /></li>
+              <li key={c.id}><ChoreRow chore={c} action={canNudge(c, me!.id) ? <NudgeButton chore={c} compact /> : undefined} /></li>
             ))}
           </ul>
         )}
@@ -735,7 +736,17 @@ export function ChoreDetailPage() {
 
   return (
     <>
-      <PageHeader eyebrow={list.name} title={chore.title} back={{ to: `/chores/lists/${list.id}`, label: list.name }} />
+      <PageHeader
+        eyebrow={list.name}
+        title={chore.title}
+        back={{ to: `/chores/lists/${list.id}`, label: list.name }}
+        action={
+          <NudgeButton
+            chore={chore}
+            onNudged={() => navigate('.', { replace: true, state: toast(`Sent ${nameOf(chore.assignedTo)} a gentle nudge.`) })}
+          />
+        }
+      />
       <Toast />
 
       <Card className="flex flex-col gap-4">

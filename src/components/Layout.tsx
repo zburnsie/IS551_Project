@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useApp } from '../data/store'
 import { Avatar } from './Avatar'
 import { buttonClass } from './Button'
+import { NudgePopup } from './NudgePopup'
 import { SkipToDemo } from './SkipToDemo'
 import { useHomePath } from './guards'
 import { PrototypeBar } from './PrototypeBar'
@@ -127,6 +128,7 @@ export function AppLayout() {
       <main className="mx-auto flex max-w-3xl flex-col gap-8 px-4 py-8 md:px-8">
         <Outlet />
       </main>
+      <NudgePopup />
     </Shell>
   )
 }
