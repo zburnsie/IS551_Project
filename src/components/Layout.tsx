@@ -28,7 +28,8 @@ function Shell({ header, children }: { header: ReactNode; children: ReactNode })
     <div className="flex min-h-screen flex-col bg-paper text-ink">
       <header className="border-b border-rule bg-surface">{header}</header>
       <div className="flex-1">{children}</div>
-      <PrototypeBar />
+      {/* Testing tools stay on the homepage only, so the demo room looks like the real app. */}
+      {pathname === '/' && <PrototypeBar />}
     </div>
   )
 }

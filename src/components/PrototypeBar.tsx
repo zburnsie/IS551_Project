@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useApp } from '../data/store'
 import { flags, setFlag, useFlag, type Flag } from '../lib/flags'
 import { buttonClass } from './Button'
@@ -17,7 +17,7 @@ function FlagToggle({ flag }: { flag: Flag }) {
 }
 
 /**
- * Prototype-only notice and testing tools, kept visually separate from the
+ * Prototype-only notice and testing tools (homepage only), kept visually separate from the
  * app: switch which roommate you're acting as (to confirm IOUs or settle up
  * from both sides), turn feature flags on or off, load the demo room, or
  * wipe everything.
@@ -25,7 +25,6 @@ function FlagToggle({ flag }: { flag: Flag }) {
 export function PrototypeBar() {
   const { me, members, actAs, loadDemo, resetAll } = useApp()
   const navigate = useNavigate()
-  const { pathname } = useLocation()
   const bar = useRef<HTMLElement>(null)
 
   // Publish the bar's height so floating UI (toasts) can sit above it.
@@ -43,15 +42,12 @@ export function PrototypeBar() {
 
   return (
     <aside ref={bar} className="sticky bottom-0 z-10 border-t border-rule bg-surface text-ink" aria-label="Prototype notice and testing tools">
-      {/* The notice only needs saying once, on the homepage. */}
-      {pathname === '/' && (
-        <div className="border-b border-accent-edge bg-accent text-ink">
-          <p className="text-label mx-auto flex max-w-3xl flex-wrap items-baseline gap-x-2 px-4 py-1 md:px-8">
-            <span className="text-caption font-medium">Prototype · for testing only</span>
-            <span>Not a real app yet. Accounts are made up and nothing leaves this browser.</span>
-          </p>
-        </div>
-      )}
+      <div className="border-b border-accent-edge bg-accent text-ink">
+        <p className="text-label mx-auto flex max-w-3xl flex-wrap items-baseline gap-x-2 px-4 py-1 md:px-8">
+          <span className="text-caption font-medium">Prototype · for testing only</span>
+          <span>Not a real app yet. Accounts are made up and nothing leaves this browser.</span>
+        </p>
+      </div>
       <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2 md:px-8">
         <span className="text-caption text-ink-muted">Testing tools</span>
         {me && members.length > 1 && (
