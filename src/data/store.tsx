@@ -96,6 +96,7 @@ type AppContextValue = {
   // Prototype controls
   actAs: (userId: UserId) => void
   loadDemo: () => void
+  enterDemo: () => void
   resetAll: () => void
 }
 
@@ -467,6 +468,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     actAs: (userId) => setState((s) => ({ ...s, sessionUserId: userId })),
     loadDemo: () => setState(demoState()),
+    // Unlike loadDemo, keeps any accounts and rooms already saved in this browser.
+    enterDemo: () =>
+      setState((s) => {
+        const demo = demoState()
+        if (s.rooms.some((r) => r.id === demo.rooms[0].id)) return { ...s, sessionUserId: demo.sessionUserId }
+        return {
+          ...s,
+          sessionUserId: demo.sessionUserId,
+          users: [...s.users, ...demo.users],
+          rooms: [...s.rooms, ...demo.rooms],
+          choreLists: [...s.choreLists, ...demo.choreLists],
+          chores: [...s.chores, ...demo.chores],
+          completions: [...s.completions, ...demo.completions],
+          ious: [...s.ious, ...demo.ious],
+          activity: [...s.activity, ...demo.activity],
+        }
+      }),
     resetAll: () => setState(emptyState),
   }
 
