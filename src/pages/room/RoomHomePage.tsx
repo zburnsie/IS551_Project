@@ -11,11 +11,12 @@ import { canNudge, NudgeButton } from '../../components/NudgeButton'
 import { ChoiceRow } from '../../components/fields'
 import { EmptyState, Flash } from '../../components/PageHeader'
 import { Tag } from '../../components/Tag'
+import { demoRoomId } from '../../data/seed'
 import { useApp } from '../../data/store'
 import type { Chore, HomeLayout, HomeView, HomeWidget } from '../../data/types'
 import { moneyBalance } from '../../lib/balances'
 import { daysUntil, firstName, formatDate, formatMoney } from '../../lib/format'
-import { useFlag } from '../../lib/flags'
+import { isFlagOnForProject, useFlag } from '../../lib/flags'
 import { allWidgets, defaultHomeLayout, featureWidget, homeViews, homeWidgets, moveWidget, normalizeHomeLayout, toggleWidget } from '../../lib/home'
 
 type Size = 'large' | 'compact'
@@ -299,7 +300,9 @@ export function RoomHomePage() {
   const [toast, setToast] = useState<string | null>(null)
   const [customizing, setCustomizing] = useState(false)
   // With the flag on, the page splits into a personal and a shared view, each arranged on its own.
-  const viewsOn = useFlag('homeViews')
+  // The demo room follows the project-wide setting, not this browser's override.
+  const flagOn = useFlag('homeViews')
+  const viewsOn = room?.id === demoRoomId ? isFlagOnForProject('homeViews') : flagOn
   const view = viewsOn ? (me!.homeView ?? 'personal') : null
   const widgets = view ? homeViews[view].widgets : allWidgets
   const defaultLayout = view ? homeViews[view].defaultLayout : defaultHomeLayout
