@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import { nextDueDate, nextInRotation } from '../lib/chores'
 import { iouValue } from '../lib/balances'
 import { dateOf, firstName, todayIso } from '../lib/format'
-import { demoState, emptyState } from './seed'
+import { demoRoomId, demoState, emptyState } from './seed'
 import type { Activity, AppState, Chore, ChoreList, HomeLayout, HomeView, Iou, Repeat, Room, User, UserId } from './types'
 
 const STORAGE_KEY = 'common-room:app'
@@ -96,6 +96,7 @@ type AppContextValue = {
   // Prototype controls
   actAs: (userId: UserId) => void
   loadDemo: () => void
+  enterDemo: () => void
   resetAll: () => void
 }
 
@@ -467,6 +468,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     actAs: (userId) => setState((s) => ({ ...s, sessionUserId: userId })),
     loadDemo: () => setState(demoState()),
+    // Unlike loadDemo, keeps any accounts and rooms already saved in this browser.
+    enterDemo: () =>
+      setState((s) => {
+        const demo = demoState()
+        if (s.rooms.some((r) => r.id === demoRoomId)) return { ...s, sessionUserId: demo.sessionUserId }
+        return {
+          ...s,
+          sessionUserId: demo.sessionUserId,
+          users: [...s.users, ...demo.users],
+          rooms: [...s.rooms, ...demo.rooms],
+          choreLists: [...s.choreLists, ...demo.choreLists],
+          chores: [...s.chores, ...demo.chores],
+          completions: [...s.completions, ...demo.completions],
+          ious: [...s.ious, ...demo.ious],
+          activity: [...s.activity, ...demo.activity],
+        }
+      }),
     resetAll: () => setState(emptyState),
   }
 
