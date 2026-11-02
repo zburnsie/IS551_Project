@@ -28,8 +28,13 @@ function readOverrides(): Partial<Record<Flag, boolean>> {
 
 let overrides = readOverrides()
 
+/** The project-wide setting, ignoring any override in this browser. */
+export function isFlagOnForProject(flag: Flag): boolean {
+  return flags[flag].env === 'true'
+}
+
 export function isFlagOn(flag: Flag): boolean {
-  return overrides[flag] ?? flags[flag].env === 'true'
+  return overrides[flag] ?? isFlagOnForProject(flag)
 }
 
 export function setFlag(flag: Flag, on: boolean) {

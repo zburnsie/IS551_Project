@@ -13,6 +13,8 @@ export const emptyState: AppState = {
   pendingCode: null,
 }
 
+export const demoRoomId = 'demo-room'
+
 /** A filled-in room for demos, signed in as Alex. Dates are relative to today. */
 export function demoState(): AppState {
   const today = todayIso()
@@ -23,7 +25,7 @@ export function demoState(): AppState {
     t.setHours(hour, 0, 0, 0)
     return t.toISOString()
   }
-  const room = 'demo-room'
+  const room = demoRoomId
   const everyone = ['alex', 'maya', 'sam', 'jordan']
   const done = (c: Omit<ChoreCompletion, 'roomId'>): ChoreCompletion => ({ roomId: room, ...c })
   const feed = (a: Omit<Activity, 'roomId' | 'readBy'> & { readBy?: string[] }): Activity => ({

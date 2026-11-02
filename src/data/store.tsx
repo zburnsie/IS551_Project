@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import { nextDueDate, nextInRotation } from '../lib/chores'
 import { iouValue } from '../lib/balances'
 import { dateOf, firstName, todayIso } from '../lib/format'
-import { demoState, emptyState } from './seed'
+import { demoRoomId, demoState, emptyState } from './seed'
 import type { Activity, AppState, Chore, ChoreList, HomeLayout, HomeView, Iou, Repeat, Room, User, UserId } from './types'
 
 const STORAGE_KEY = 'common-room:app'
@@ -472,7 +472,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     enterDemo: () =>
       setState((s) => {
         const demo = demoState()
-        if (s.rooms.some((r) => r.id === demo.rooms[0].id)) return { ...s, sessionUserId: demo.sessionUserId }
+        if (s.rooms.some((r) => r.id === demoRoomId)) return { ...s, sessionUserId: demo.sessionUserId }
         return {
           ...s,
           sessionUserId: demo.sessionUserId,
